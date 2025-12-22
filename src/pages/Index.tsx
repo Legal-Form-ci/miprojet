@@ -1,0 +1,33 @@
+import { Navigation } from "@/components/Navigation";
+import { Hero } from "@/components/Hero";
+import { PartnershipBanner } from "@/components/PartnershipBanner";
+import { StatsSection } from "@/components/StatsSection";
+import { HowItWorks } from "@/components/HowItWorks";
+import { ServicesSection } from "@/components/ServicesSection";
+import { FundingTypes } from "@/components/FundingTypes";
+import { FeaturedProjects } from "@/components/FeaturedProjects";
+import { TestimonialsSection } from "@/components/TestimonialsSection";
+import { Features } from "@/components/Features";
+import { CallToAction } from "@/components/CallToAction";
+import { Footer } from "@/components/Footer";
+
+const Index = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <Hero />
+      <PartnershipBanner />
+      <StatsSection />
+      <HowItWorks />
+      <ServicesSection />
+      <FundingTypes />
+      <FeaturedProjects />
+      <TestimonialsSection />
+      <Features />
+      <CallToAction />
+      <Footer />
+    </div>
+  );
+};
+
+export default Index;
