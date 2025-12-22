@@ -76,28 +76,49 @@ export const PaymentModal = ({
     setIsProcessing(true);
 
     try {
-      // Call the payment edge function for secure server-side processing
-      const { data, error } = await supabase.functions.invoke('money-fusion-payment', {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({
+          title: "Non connecté",
+          description: "Veuillez vous connecter pour effectuer un paiement",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Call the FedaPay payment edge function
+      const { data, error } = await supabase.functions.invoke('fedapay-payment', {
         body: {
           amount: numericAmount,
-          payment_method: paymentMethod,
-          project_id: projectId,
-          phone_number: phoneNumber,
           currency: 'XOF',
+          description: `Contribution - ${projectTitle}`,
+          projectId: projectId,
+          userId: user.id,
+          customer: {
+            phone: phoneNumber,
+          },
+          callbackUrl: `${window.location.origin}/dashboard?payment=success`,
         },
       });
 
       if (error) throw error;
 
       if (!data?.success) {
-        throw new Error(data?.error || 'Payment initiation failed');
+        throw new Error(data?.error || 'Échec de l\'initiation du paiement');
       }
 
-      // Payment initiated - contribution will be recorded by webhook after confirmation
+      // If we have a payment URL, redirect to it
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+
+      // Payment initiated successfully
       setStep(3);
       toast({
         title: "Paiement initié",
-        description: `Veuillez confirmer le paiement de ${numericAmount.toLocaleString()} FCFA sur votre téléphone.`,
+        description: `Veuillez confirmer le paiement de ${numericAmount.toLocaleString()} FCFA.`,
       });
     } catch (error) {
       console.error('Payment error:', error);
@@ -213,7 +234,7 @@ export const PaymentModal = ({
 
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4 text-success" />
-              <span>Paiement sécurisé par Money Fusion</span>
+              <span>Paiement sécurisé par FedaPay</span>
             </div>
 
             <div className="flex gap-2">

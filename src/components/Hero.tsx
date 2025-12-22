@@ -25,17 +25,20 @@ export const Hero = () => {
           <div className="space-y-8 text-primary-foreground">
             <div className="inline-block">
               <span className="px-4 py-2 bg-accent/20 rounded-full text-accent font-semibold text-sm">
-                {t('hero.badge')}
+                Plateforme Panafricaine
               </span>
             </div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-              {t('hero.title1')}{" "}
-              <span className="text-accent">{t('hero.title2')}</span>
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
+              <span className="block">Plateforme Panafricaine de</span>
+              <span className="text-accent block">Structuration et de Financement</span>
+              <span className="block">de Projets</span>
             </h1>
             
-            <p className="text-lg sm:text-xl text-primary-foreground/90 leading-relaxed max-w-xl">
-              {t('hero.description')}
+            <p className="text-base sm:text-lg md:text-xl text-primary-foreground/90 leading-relaxed max-w-xl">
+              MIPROJET accompagne les entrepreneurs africains dans la structuration professionnelle 
+              de leurs projets selon les normes ISO 21500. Notre expertise transforme vos idées 
+              en dossiers bancables, prêts à convaincre investisseurs et bailleurs de fonds.
             </p>
 
             {/* Highlights */}

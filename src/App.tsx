@@ -23,6 +23,7 @@ import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminInit from "./pages/admin/AdminInit";
 import ServiceRequest from "./pages/ServiceRequest";
 import ProjectDetail from "./pages/ProjectDetail";
 import Crowdfunding from "./pages/Crowdfunding";
@@ -71,9 +72,11 @@ const App = () => (
             <Route path="/services" element={<Services />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/admin/init" element={<AdminInit />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
