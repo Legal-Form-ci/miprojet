@@ -8,18 +8,23 @@ import { Search, Filter, X, MapPin, Building2, Tag, Globe } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 interface ProjectFiltersProps {
+  filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
+  onClear: () => void;
 }
 
 export interface FilterState {
-  search: string;
+  search?: string;
   sector: string;
   category: string;
   country: string;
   region: string;
   city: string;
-  minFunding: string;
-  maxFunding: string;
+  minAmount?: string;
+  maxAmount?: string;
+  minFunding?: string;
+  maxFunding?: string;
+  riskScore?: string;
 }
 
 const sectors = [
@@ -91,17 +96,17 @@ const regions: Record<string, string[]> = {
   "Burkina Faso": ["Ouagadougou", "Bobo-Dioulasso", "Koudougou", "Banfora"],
 };
 
-export const ProjectFilters = ({ onFilterChange }: ProjectFiltersProps) => {
+export const ProjectFilters = ({ filters: externalFilters, onFilterChange, onClear }: ProjectFiltersProps) => {
   const { t } = useLanguage();
   const [filters, setFilters] = useState<FilterState>({
-    search: "",
-    sector: "",
-    category: "",
-    country: "",
-    region: "",
-    city: "",
-    minFunding: "",
-    maxFunding: "",
+    search: externalFilters.search || "",
+    sector: externalFilters.sector || "",
+    category: externalFilters.category || "",
+    country: externalFilters.country || "",
+    region: externalFilters.region || "",
+    city: externalFilters.city || "",
+    minFunding: externalFilters.minAmount || externalFilters.minFunding || "",
+    maxFunding: externalFilters.maxAmount || externalFilters.maxFunding || "",
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
