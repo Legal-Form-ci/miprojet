@@ -12,7 +12,7 @@ interface ProjectCardProps {
   currentFunding: number;
   backers: number;
   daysLeft: number;
-  score: "A" | "B" | "C";
+  score: "A" | "B" | "C" | "D";
   image: string;
 }
 
@@ -34,6 +34,7 @@ export const ProjectCard = ({
     A: "bg-success text-white",
     B: "bg-warning text-white",
     C: "bg-info text-white",
+    D: "bg-muted-foreground text-white",
   };
 
   return (

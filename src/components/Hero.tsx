@@ -15,80 +15,77 @@ export const Hero = () => {
   ];
 
   return (
-    <section className="relative min-h-screen flex items-center pt-16">
+    <section className="relative min-h-screen flex items-center pt-20 pb-12 overflow-hidden">
       {/* Background Pattern */}
       <div className="absolute inset-0 bg-gradient-hero opacity-95" />
       
-      <div className="container mx-auto px-4 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
-          <div className="space-y-8 text-primary-foreground">
-            <div className="inline-block">
-              <span className="px-4 py-2 bg-accent/20 rounded-full text-accent font-semibold text-sm">
-                Plateforme Panafricaine
-              </span>
+          <div className="space-y-6 sm:space-y-8 text-primary-foreground text-center lg:text-left">
+            {/* Title - properly wrapped */}
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
+                <span className="block">Plateforme Panafricaine de</span>
+                <span className="text-accent block mt-1">Structuration et de Financement</span>
+                <span className="block mt-1">de Projets</span>
+              </h1>
             </div>
             
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight">
-              <span className="block">Plateforme Panafricaine de</span>
-              <span className="text-accent block">Structuration et de Financement</span>
-              <span className="block">de Projets</span>
-            </h1>
-            
-            <p className="text-base sm:text-lg md:text-xl text-primary-foreground/90 leading-relaxed max-w-xl">
+            <p className="text-sm sm:text-base md:text-lg text-primary-foreground/90 leading-relaxed max-w-xl mx-auto lg:mx-0">
               MIPROJET accompagne les entrepreneurs africains dans la structuration professionnelle 
               de leurs projets selon les normes ISO 21500. Notre expertise transforme vos idées 
-              en dossiers bancables, prêts à convaincre investisseurs et bailleurs de fonds.
+              en dossiers bancables.
             </p>
 
-            {/* Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Highlights - responsive grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-xl mx-auto lg:mx-0">
               {highlights.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 text-primary-foreground/90">
-                  <CheckCircle className="h-5 w-5 text-accent flex-shrink-0" />
-                  <span className="text-sm">{item}</span>
+                <div key={index} className="flex items-center gap-2 text-primary-foreground/90 justify-center lg:justify-start">
+                  <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-accent flex-shrink-0" />
+                  <span className="text-xs sm:text-sm">{item}</span>
                 </div>
               ))}
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 sm:gap-6 py-6 sm:py-8">
-              <div className="space-y-1 sm:space-y-2">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
-                  <span className="text-2xl sm:text-3xl font-bold">150+</span>
+            {/* Stats - responsive */}
+            <div className="grid grid-cols-3 gap-3 sm:gap-6 py-4 sm:py-6">
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
+                  <TrendingUp className="h-4 w-4 text-accent" />
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">150+</span>
                 </div>
-                <p className="text-xs sm:text-sm text-primary-foreground/80">{t('hero.projectsFinanced')}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.projectsFinanced')}</p>
               </div>
-              <div className="space-y-1 sm:space-y-2">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
-                  <span className="text-2xl sm:text-3xl font-bold">2K+</span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
+                  <Users className="h-4 w-4 text-accent" />
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">2K+</span>
                 </div>
-                <p className="text-xs sm:text-sm text-primary-foreground/80">{t('hero.activeMembers')}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.activeMembers')}</p>
               </div>
-              <div className="space-y-1 sm:space-y-2">
-                <div className="flex items-center gap-2">
-                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
-                  <span className="text-2xl sm:text-3xl font-bold">92%</span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
+                  <Shield className="h-4 w-4 text-accent" />
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">92%</span>
                 </div>
-                <p className="text-xs sm:text-sm text-primary-foreground/80">{t('hero.successRate')}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.successRate')}</p>
               </div>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/submit-project">
-                <Button size="lg" variant="premium" className="w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
+              <Link to="/submit-project" className="w-full sm:w-auto">
+                <Button size="lg" variant="premium" className="w-full">
                   {t('hero.startProject')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
-              <Link to="/projects">
+              <Link to="/projects" className="w-full sm:w-auto">
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="w-full sm:w-auto bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20"
+                  className="w-full bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20"
                 >
                   {t('hero.discoverProjects')}
                 </Button>

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -29,7 +29,19 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Crowdfunding from "./pages/Crowdfunding";
 import FundingMobilization from "./pages/services/FundingMobilization";
 
+// Lazy load service pages
+const StructuringService = lazy(() => import("./pages/services/StructuringService"));
+const FundingService = lazy(() => import("./pages/services/FundingService"));
+const EnterpriseService = lazy(() => import("./pages/services/EnterpriseService"));
+
 const queryClient = new QueryClient();
+
+// Loading fallback
+const PageLoader = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+);
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -66,17 +78,40 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/submit-project" element={<SubmitProject />} />
             <Route path="/service-request" element={<ServiceRequest />} />
+            
+            {/* Service pages */}
+            <Route path="/services" element={<Services />} />
             <Route path="/services/funding-mobilization" element={<FundingMobilization />} />
+            <Route path="/services/structuration" element={
+              <Suspense fallback={<PageLoader />}>
+                <StructuringService />
+              </Suspense>
+            } />
+            <Route path="/services/financement" element={
+              <Suspense fallback={<PageLoader />}>
+                <FundingService />
+              </Suspense>
+            } />
+            <Route path="/services/accompagnement" element={
+              <Suspense fallback={<PageLoader />}>
+                <EnterpriseService />
+              </Suspense>
+            } />
+            
+            {/* Dashboard */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
-            <Route path="/services" element={<Services />} />
+            
+            {/* Other pages */}
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
+            
+            {/* Admin */}
             <Route path="/admin/init" element={<AdminInit />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/*" element={<AdminDashboard />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
+            
+            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
