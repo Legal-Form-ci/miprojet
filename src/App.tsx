@@ -29,10 +29,11 @@ import ProjectDetail from "./pages/ProjectDetail";
 import Crowdfunding from "./pages/Crowdfunding";
 import FundingMobilization from "./pages/services/FundingMobilization";
 
-// Lazy load service pages
+// Lazy load service and payment pages
 const StructuringService = lazy(() => import("./pages/services/StructuringService"));
 const FundingService = lazy(() => import("./pages/services/FundingService"));
 const EnterpriseService = lazy(() => import("./pages/services/EnterpriseService"));
+const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 
 const queryClient = new QueryClient();
 
@@ -101,6 +102,13 @@ const App = () => (
             {/* Dashboard */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
+            
+            {/* Payment */}
+            <Route path="/payment/callback" element={
+              <Suspense fallback={<PageLoader />}>
+                <PaymentCallback />
+              </Suspense>
+            } />
             
             {/* Other pages */}
             <Route path="/contact" element={<Contact />} />
