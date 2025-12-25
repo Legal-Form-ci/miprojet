@@ -1,14 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { TrendingUp, Users, Globe, Award, Building, Briefcase } from "lucide-react";
-
-const stats = [
-  { icon: TrendingUp, value: 500, suffix: "+", label: "Projets structurés", color: "text-primary" },
-  { icon: Users, value: 5000, suffix: "+", label: "Membres actifs", color: "text-secondary" },
-  { icon: Globe, value: 12, suffix: "", label: "Pays couverts", color: "text-accent" },
-  { icon: Award, value: 95, suffix: "%", label: "Taux de succès", color: "text-success" },
-  { icon: Building, value: 150, suffix: "+", label: "Partenaires", color: "text-info" },
-  { icon: Briefcase, value: 2, suffix: "Mds FCFA", label: "Fonds mobilisés", color: "text-warning" },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const useCountUp = (end: number, duration: number = 2000, start: boolean = false) => {
   const [count, setCount] = useState(0);
@@ -31,7 +23,15 @@ const useCountUp = (end: number, duration: number = 2000, start: boolean = false
   return count;
 };
 
-const StatCard = ({ stat, index, isVisible }: { stat: typeof stats[0]; index: number; isVisible: boolean }) => {
+interface StatItem {
+  icon: typeof TrendingUp;
+  value: number;
+  suffix: string;
+  labelKey: string;
+  color: string;
+}
+
+const StatCard = ({ stat, index, isVisible, t }: { stat: StatItem; index: number; isVisible: boolean; t: (key: string) => string }) => {
   const count = useCountUp(stat.value, 2000, isVisible);
   
   return (
@@ -46,7 +46,7 @@ const StatCard = ({ stat, index, isVisible }: { stat: typeof stats[0]; index: nu
         <p className={`text-4xl font-bold ${stat.color}`}>
           {count}{stat.suffix}
         </p>
-        <p className="text-muted-foreground font-medium">{stat.label}</p>
+        <p className="text-muted-foreground font-medium">{t(stat.labelKey)}</p>
       </div>
     </div>
   );
@@ -55,6 +55,17 @@ const StatCard = ({ stat, index, isVisible }: { stat: typeof stats[0]; index: nu
 export const StatsSection = () => {
   const [isVisible, setIsVisible] = useState(false);
   const sectionRef = useRef<HTMLDivElement>(null);
+  const { t } = useLanguage();
+
+  // Updated stats - "Fonds mobilisés" reformulated to "Projets accompagnés vers des financements estimés à"
+  const stats: StatItem[] = [
+    { icon: TrendingUp, value: 500, suffix: "+", labelKey: 'stats.projectsStructured', color: "text-primary" },
+    { icon: Users, value: 5000, suffix: "+", labelKey: 'stats.activeMembers', color: "text-secondary" },
+    { icon: Globe, value: 12, suffix: "", labelKey: 'stats.countriesCovered', color: "text-accent" },
+    { icon: Award, value: 95, suffix: "%", labelKey: 'stats.successRate', color: "text-success" },
+    { icon: Building, value: 150, suffix: "+", labelKey: 'stats.partners', color: "text-info" },
+    { icon: Briefcase, value: 2, suffix: " Mds FCFA", labelKey: 'stats.estimatedFunding', color: "text-warning" },
+  ];
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -77,17 +88,17 @@ export const StatsSection = () => {
     <section ref={sectionRef} className="py-24 bg-gradient-hero">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-4">
-            MIPROJET en Chiffres
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
+            {t('stats.title')}
           </h2>
-          <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-            Des résultats concrets qui témoignent de notre engagement envers l'entrepreneuriat africain
+          <p className="text-lg md:text-xl text-primary-foreground/80 max-w-2xl mx-auto">
+            {t('stats.subtitle')}
           </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {stats.map((stat, index) => (
-            <StatCard key={stat.label} stat={stat} index={index} isVisible={isVisible} />
+            <StatCard key={stat.labelKey} stat={stat} index={index} isVisible={isVisible} t={t} />
           ))}
         </div>
       </div>

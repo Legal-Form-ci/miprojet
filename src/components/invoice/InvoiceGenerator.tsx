@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, Download, Printer, FileText } from "lucide-react";
+import { Plus, Trash2, Download, Printer, FileText, Eye } from "lucide-react";
 import { InvoicePreview } from "./InvoicePreview";
 
 interface InvoiceItem {
@@ -19,6 +19,7 @@ interface InvoiceItem {
 }
 
 interface InvoiceData {
+  invoiceNumber: string;
   clientName: string;
   clientEmail: string;
   clientPhone: string;
@@ -38,9 +39,16 @@ const serviceOptions = [
   { value: 'risk_analysis', label: 'Analyse des risques', price: 80000 },
   { value: 'training', label: 'Formation / Coaching', price: 50000 },
   { value: 'consulting', label: 'Consultance (par heure)', price: 25000 },
-  { value: 'commission', label: 'Commission sur financement (%)', price: 0 },
+  { value: 'company_creation', label: 'Création d\'entreprise', price: 75000 },
   { value: 'custom', label: 'Service personnalisé', price: 0 },
 ];
+
+// Generate invoice number with format MIP-YYYY-XXXX
+const generateInvoiceNumber = () => {
+  const year = new Date().getFullYear();
+  const random = Math.floor(1000 + Math.random() * 9000);
+  return `MIP-${year}-${random}`;
+};
 
 export const InvoiceGenerator = () => {
   const { t, language } = useLanguage();
@@ -50,12 +58,13 @@ export const InvoiceGenerator = () => {
   const [saving, setSaving] = useState(false);
 
   const [invoiceData, setInvoiceData] = useState<InvoiceData>({
+    invoiceNumber: generateInvoiceNumber(),
     clientName: '',
     clientEmail: '',
     clientPhone: '',
     clientAddress: '',
     items: [{ description: '', quantity: 1, unitPrice: 0, total: 0 }],
-    notes: '',
+    notes: 'Paiement à effectuer dans les 30 jours suivant la réception de cette facture.',
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     taxRate: 18,
   });
@@ -89,8 +98,14 @@ export const InvoiceGenerator = () => {
   const selectService = (index: number, serviceValue: string) => {
     const service = serviceOptions.find(s => s.value === serviceValue);
     if (service) {
-      updateItem(index, 'description', service.label);
-      updateItem(index, 'unitPrice', service.price);
+      const newItems = [...invoiceData.items];
+      newItems[index] = { 
+        ...newItems[index], 
+        description: service.label, 
+        unitPrice: service.price,
+        total: newItems[index].quantity * service.price
+      };
+      setInvoiceData({ ...invoiceData, items: newItems });
     }
   };
 
@@ -110,7 +125,7 @@ export const InvoiceGenerator = () => {
       if (!user) throw new Error("Non authentifié");
 
       const { data, error } = await supabase.from('invoices').insert([{
-        invoice_number: `MIP-${Date.now()}`, // Will be overwritten by trigger
+        invoice_number: invoiceData.invoiceNumber,
         user_id: user.id,
         items: invoiceData.items as any,
         subtotal: subtotal,
@@ -125,7 +140,7 @@ export const InvoiceGenerator = () => {
 
       if (error) throw error;
 
-      toast({ title: "Succès", description: `Facture créée avec succès` });
+      toast({ title: "Succès", description: `Facture ${invoiceData.invoiceNumber} créée avec succès` });
       setShowPreview(true);
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
@@ -136,6 +151,18 @@ export const InvoiceGenerator = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleExportPDF = () => {
+    // First show preview, then trigger print which can save as PDF
+    setShowPreview(true);
+    setTimeout(() => {
+      window.print();
+    }, 500);
+  };
+
+  const regenerateNumber = () => {
+    setInvoiceData({ ...invoiceData, invoiceNumber: generateInvoiceNumber() });
   };
 
   if (showPreview) {
@@ -157,14 +184,29 @@ export const InvoiceGenerator = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
-            Nouvelle Facture
+            {t('invoice.newInvoice')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Invoice Number */}
+          <div className="flex items-end gap-4">
+            <div className="flex-1 space-y-2">
+              <Label>{t('invoice.number')}</Label>
+              <Input
+                value={invoiceData.invoiceNumber}
+                onChange={(e) => setInvoiceData({ ...invoiceData, invoiceNumber: e.target.value })}
+                className="font-mono"
+              />
+            </div>
+            <Button variant="outline" onClick={regenerateNumber} type="button">
+              {t('invoice.regenerate')}
+            </Button>
+          </div>
+
           {/* Client Information */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Nom du client *</Label>
+              <Label>{t('invoice.clientName')} *</Label>
               <Input
                 value={invoiceData.clientName}
                 onChange={(e) => setInvoiceData({ ...invoiceData, clientName: e.target.value })}
@@ -172,7 +214,7 @@ export const InvoiceGenerator = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>{t('common.email')}</Label>
               <Input
                 type="email"
                 value={invoiceData.clientEmail}
@@ -181,7 +223,7 @@ export const InvoiceGenerator = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Téléphone</Label>
+              <Label>{t('common.phone')}</Label>
               <Input
                 value={invoiceData.clientPhone}
                 onChange={(e) => setInvoiceData({ ...invoiceData, clientPhone: e.target.value })}
@@ -189,7 +231,7 @@ export const InvoiceGenerator = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Date d'échéance</Label>
+              <Label>{t('invoice.dueDate')}</Label>
               <Input
                 type="date"
                 value={invoiceData.dueDate}
@@ -199,7 +241,7 @@ export const InvoiceGenerator = () => {
           </div>
 
           <div className="space-y-2">
-            <Label>Adresse</Label>
+            <Label>{t('common.address')}</Label>
             <Textarea
               value={invoiceData.clientAddress}
               onChange={(e) => setInvoiceData({ ...invoiceData, clientAddress: e.target.value })}
@@ -211,10 +253,10 @@ export const InvoiceGenerator = () => {
           {/* Invoice Items */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-lg font-semibold">Lignes de facture</Label>
+              <Label className="text-lg font-semibold">{t('invoice.items')}</Label>
               <Button variant="outline" size="sm" onClick={addItem}>
                 <Plus className="h-4 w-4 mr-1" />
-                Ajouter
+                {t('invoice.addItem')}
               </Button>
             </div>
 
@@ -222,10 +264,10 @@ export const InvoiceGenerator = () => {
               <Card key={index} className="p-4">
                 <div className="grid md:grid-cols-12 gap-4 items-end">
                   <div className="md:col-span-4 space-y-2">
-                    <Label>Service</Label>
+                    <Label>{t('invoice.service')}</Label>
                     <Select onValueChange={(v) => selectService(index, v)}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Sélectionner un service" />
+                        <SelectValue placeholder={t('invoice.selectService')} />
                       </SelectTrigger>
                       <SelectContent>
                         {serviceOptions.map((service) => (
@@ -237,7 +279,7 @@ export const InvoiceGenerator = () => {
                     </Select>
                   </div>
                   <div className="md:col-span-3 space-y-2">
-                    <Label>Description</Label>
+                    <Label>{t('common.description')}</Label>
                     <Input
                       value={item.description}
                       onChange={(e) => updateItem(index, 'description', e.target.value)}
@@ -245,7 +287,7 @@ export const InvoiceGenerator = () => {
                     />
                   </div>
                   <div className="md:col-span-1 space-y-2">
-                    <Label>Qté</Label>
+                    <Label>{t('invoice.qty')}</Label>
                     <Input
                       type="number"
                       min="1"
@@ -254,7 +296,7 @@ export const InvoiceGenerator = () => {
                     />
                   </div>
                   <div className="md:col-span-2 space-y-2">
-                    <Label>Prix unitaire</Label>
+                    <Label>{t('invoice.unitPrice')}</Label>
                     <Input
                       type="number"
                       value={item.unitPrice}
@@ -262,7 +304,7 @@ export const InvoiceGenerator = () => {
                     />
                   </div>
                   <div className="md:col-span-1 space-y-2">
-                    <Label>Total</Label>
+                    <Label>{t('common.total')}</Label>
                     <div className="h-10 flex items-center font-medium">
                       {(item.quantity * item.unitPrice).toLocaleString()}
                     </div>
@@ -288,11 +330,11 @@ export const InvoiceGenerator = () => {
             <div className="flex justify-end">
               <div className="w-full md:w-1/3 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sous-total</span>
+                  <span className="text-muted-foreground">{t('common.subtotal')}</span>
                   <span>{subtotal.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between items-center gap-2">
-                  <span className="text-muted-foreground">TVA</span>
+                  <span className="text-muted-foreground">{t('invoice.vat')}</span>
                   <div className="flex items-center gap-2">
                     <Input
                       type="number"
@@ -305,7 +347,7 @@ export const InvoiceGenerator = () => {
                   <span>{taxAmount.toLocaleString()} FCFA</span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total TTC</span>
+                  <span>{t('invoice.totalTTC')}</span>
                   <span className="text-primary">{total.toLocaleString()} FCFA</span>
                 </div>
               </div>
@@ -314,7 +356,7 @@ export const InvoiceGenerator = () => {
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label>Notes / Conditions</Label>
+            <Label>{t('invoice.notes')}</Label>
             <Textarea
               value={invoiceData.notes}
               onChange={(e) => setInvoiceData({ ...invoiceData, notes: e.target.value })}
@@ -326,16 +368,20 @@ export const InvoiceGenerator = () => {
           {/* Actions */}
           <div className="flex flex-wrap gap-3 justify-end">
             <Button variant="outline" onClick={() => setShowPreview(true)}>
-              <FileText className="h-4 w-4 mr-2" />
-              Aperçu
+              <Eye className="h-4 w-4 mr-2" />
+              {t('invoice.preview')}
+            </Button>
+            <Button variant="outline" onClick={handleExportPDF}>
+              <Download className="h-4 w-4 mr-2" />
+              {t('invoice.exportPDF')}
             </Button>
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-2" />
-              Imprimer
+              {t('common.print')}
             </Button>
             <Button onClick={handleSaveInvoice} disabled={saving}>
-              <Download className="h-4 w-4 mr-2" />
-              {saving ? "Enregistrement..." : "Enregistrer"}
+              <FileText className="h-4 w-4 mr-2" />
+              {saving ? t('common.loading') : t('common.save')}
             </Button>
           </div>
         </CardContent>

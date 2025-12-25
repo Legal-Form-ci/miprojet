@@ -1,40 +1,43 @@
 import { Shield, TrendingUp, Users, Award, BarChart3, HeadphonesIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const features = [
-  {
-    icon: Shield,
-    title: "Sécurité Maximale",
-    description: "Compte séquestre, déblocage progressif et protection juridique intégrée",
-  },
-  {
-    icon: Award,
-    title: "Label Qualité",
-    description: "Validation professionnelle ISO 21500 et score de crédibilité transparent",
-  },
-  {
-    icon: TrendingUp,
-    title: "Structuration Pro",
-    description: "Business plan, étude de faisabilité et analyse de risques par experts",
-  },
-  {
-    icon: Users,
-    title: "Réseau Panafricain",
-    description: "Accès à 5000+ membres, investisseurs et experts à travers l'Afrique",
-  },
-  {
-    icon: BarChart3,
-    title: "Suivi Transparent",
-    description: "Rapports d'avancement réguliers et tableau de bord en temps réel",
-  },
-  {
-    icon: HeadphonesIcon,
-    title: "Accompagnement",
-    description: "Support personnalisé de la soumission jusqu'au succès du projet",
-  },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export const Features = () => {
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: Shield,
+      titleKey: 'features.security.title',
+      descriptionKey: 'features.security.description',
+    },
+    {
+      icon: Award,
+      titleKey: 'features.quality.title',
+      descriptionKey: 'features.quality.description',
+    },
+    {
+      icon: TrendingUp,
+      titleKey: 'features.structuring.title',
+      descriptionKey: 'features.structuring.description',
+    },
+    {
+      icon: Users,
+      titleKey: 'features.network.title',
+      descriptionKey: 'features.network.description',
+    },
+    {
+      icon: BarChart3,
+      titleKey: 'features.tracking.title',
+      descriptionKey: 'features.tracking.description',
+    },
+    {
+      icon: HeadphonesIcon,
+      titleKey: 'features.support.title',
+      descriptionKey: 'features.support.description',
+    },
+  ];
+
   return (
     <section className="py-24 bg-background relative overflow-hidden">
       {/* Background decoration */}
@@ -42,11 +45,11 @@ export const Features = () => {
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-            Pourquoi Choisir MIPROJET ?
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
+            {t('features.title')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Une plateforme complète qui accompagne votre réussite de A à Z
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+            {t('features.subtitle')}
           </p>
         </div>
 
@@ -61,10 +64,10 @@ export const Features = () => {
                   <feature.icon className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">
-                  {feature.title}
+                  {t(feature.titleKey)}
                 </h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  {feature.description}
+                  {t(feature.descriptionKey)}
                 </p>
               </CardContent>
             </Card>

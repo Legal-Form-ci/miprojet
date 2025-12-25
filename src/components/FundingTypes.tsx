@@ -1,87 +1,113 @@
-import { Heart, TrendingUp, PieChart } from "lucide-react";
+import { Heart, Building2, Landmark, PieChart, Handshake, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-const fundingTypes = [
-  {
-    icon: Heart,
-    title: "Crowdfunding Don",
-    badge: "Social",
-    description: "Pour projets communautaires et sociaux",
-    features: [
-      "Contributeurs reçoivent des contreparties",
-      "Seuil minimum à atteindre",
-      "Idéal pour impact social",
-      "Transparence totale",
-    ],
-    color: "text-destructive",
-    bgColor: "bg-destructive/10",
-  },
-  {
-    icon: TrendingUp,
-    title: "Crowdlending",
-    badge: "Prêt",
-    description: "Investissement avec remboursement échelonné",
-    features: [
-      "Prêt avec intérêts définis",
-      "Remboursement progressif",
-      "Taux selon score de risque",
-      "Protection investisseur",
-    ],
-    color: "text-info",
-    bgColor: "bg-info/10",
-  },
-  {
-    icon: PieChart,
-    title: "Equity Crowdfunding",
-    badge: "Capital",
-    description: "Devenez actionnaire du projet",
-    features: [
-      "Prise de participation au capital",
-      "Rendement sur bénéfices futurs",
-      "Pour startups & entreprises",
-      "Vision long terme",
-    ],
-    color: "text-success",
-    bgColor: "bg-success/10",
-  },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export const FundingTypes = () => {
+  const { t } = useLanguage();
+
+  const fundingTypes = [
+    {
+      icon: Heart,
+      title: t('funding.donors.title'),
+      badge: t('funding.donors.badge'),
+      description: t('funding.donors.description'),
+      features: [
+        t('funding.donors.feature1'),
+        t('funding.donors.feature2'),
+        t('funding.donors.feature3'),
+      ],
+      color: "text-destructive",
+      bgColor: "bg-destructive/10",
+    },
+    {
+      icon: Building2,
+      title: t('funding.grants.title'),
+      badge: t('funding.grants.badge'),
+      description: t('funding.grants.description'),
+      features: [
+        t('funding.grants.feature1'),
+        t('funding.grants.feature2'),
+        t('funding.grants.feature3'),
+      ],
+      color: "text-info",
+      bgColor: "bg-info/10",
+    },
+    {
+      icon: Landmark,
+      title: t('funding.loan.title'),
+      badge: t('funding.loan.badge'),
+      description: t('funding.loan.description'),
+      features: [
+        t('funding.loan.feature1'),
+        t('funding.loan.feature2'),
+        t('funding.loan.feature3'),
+      ],
+      color: "text-warning",
+      bgColor: "bg-warning/10",
+    },
+    {
+      icon: PieChart,
+      title: t('funding.equity.title'),
+      badge: t('funding.equity.badge'),
+      description: t('funding.equity.description'),
+      features: [
+        t('funding.equity.feature1'),
+        t('funding.equity.feature2'),
+        t('funding.equity.feature3'),
+      ],
+      color: "text-success",
+      bgColor: "bg-success/10",
+    },
+    {
+      icon: Handshake,
+      title: t('funding.partnership.title'),
+      badge: t('funding.partnership.badge'),
+      description: t('funding.partnership.description'),
+      features: [
+        t('funding.partnership.feature1'),
+        t('funding.partnership.feature2'),
+        t('funding.partnership.feature3'),
+      ],
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+    },
+  ];
+
   return (
     <section className="py-24 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-            3 Types de Financement
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
+            {t('funding.title')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choisissez le mode de financement adapté à votre projet
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+            {t('funding.subtitle')}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
           {fundingTypes.map((type) => (
             <Card
               key={type.title}
               className="group hover:shadow-glow transition-all duration-300 hover:-translate-y-1 border-2 hover:border-primary/30"
             >
-              <CardHeader>
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`p-4 rounded-xl ${type.bgColor}`}>
-                    <type.icon className={`h-8 w-8 ${type.color}`} />
+                  <div className={`p-3 rounded-xl ${type.bgColor}`}>
+                    <type.icon className={`h-6 w-6 ${type.color}`} />
                   </div>
                   <Badge className={type.bgColor + " " + type.color}>{type.badge}</Badge>
                 </div>
-                <CardTitle className="text-2xl">{type.title}</CardTitle>
-                <p className="text-muted-foreground">{type.description}</p>
+                <CardTitle className="text-lg">{type.title}</CardTitle>
+                <p className="text-sm text-muted-foreground">{type.description}</p>
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {type.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
-                      <span className="text-sm text-foreground">{feature}</span>
+                      <div className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary flex-shrink-0" />
+                      <span className="text-xs text-foreground">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -90,27 +116,17 @@ export const FundingTypes = () => {
           ))}
         </div>
 
-        {/* Security Section */}
-        <div className="mt-16 bg-gradient-primary p-8 md:p-12 rounded-2xl text-primary-foreground">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h3 className="text-3xl font-bold">Compte Séquestre Sécurisé</h3>
-            <p className="text-lg text-primary-foreground/90">
-              Tous les fonds collectés sont déposés dans un compte séquestre MIPROJET et 
-              débloqués progressivement selon l'avancement du projet :
-            </p>
-            <div className="grid md:grid-cols-3 gap-6 pt-6">
-              <div className="space-y-2">
-                <p className="text-5xl font-bold text-accent">30%</p>
-                <p className="text-sm">Au démarrage</p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-5xl font-bold text-accent">40%</p>
-                <p className="text-sm">À mi-parcours</p>
-              </div>
-              <div className="space-y-2">
-                <p className="text-5xl font-bold text-accent">30%</p>
-                <p className="text-sm">À la finalisation</p>
-              </div>
+        {/* Important Notice */}
+        <div className="mt-16 bg-muted/50 p-6 md:p-8 rounded-2xl border border-border">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-info/10 rounded-xl flex-shrink-0">
+              <Info className="h-6 w-6 text-info" />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-foreground">{t('funding.notice.title')}</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                {t('funding.notice.description')}
+              </p>
             </div>
           </div>
         </div>
