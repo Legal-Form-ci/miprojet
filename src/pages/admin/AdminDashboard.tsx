@@ -17,6 +17,7 @@ import { AdminStats } from "@/components/admin/AdminStats";
 import { AdminProjectsTable } from "@/components/admin/AdminProjectsTable";
 import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
 import { AdminCharts } from "@/components/admin/AdminCharts";
+import { AdminRequestsTable } from "@/components/admin/AdminRequestsTable";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -132,6 +133,17 @@ const AdminDashboard = () => {
               </div>
               
               <AdminUsersTable />
+            </TabsContent>
+            
+            <TabsContent value="requests" className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold">Demandes de Services</h1>
+                  <p className="text-muted-foreground">Gérez les demandes de structuration, financement et accompagnement</p>
+                </div>
+              </div>
+              
+              <AdminRequestsTable />
             </TabsContent>
             
             <TabsContent value="finance" className="space-y-6">
