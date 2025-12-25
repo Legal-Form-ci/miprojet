@@ -47,6 +47,53 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_ar: string | null
+          name_en: string | null
+          parent_id: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_ar?: string | null
+          name_en?: string | null
+          parent_id?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_ar?: string | null
+          name_en?: string | null
+          parent_id?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contributions: {
         Row: {
           amount: number
@@ -81,6 +128,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      form_progress: {
+        Row: {
+          created_at: string
+          current_step: number | null
+          data: Json | null
+          form_type: string
+          id: string
+          is_completed: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_step?: number | null
+          data?: Json | null
+          form_type: string
+          id?: string
+          is_completed?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: number | null
+          data?: Json | null
+          form_type?: string
+          id?: string
+          is_completed?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       invoices: {
         Row: {
@@ -176,6 +256,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string | null
+          metadata: Json | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          metadata?: Json | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string | null
+          metadata?: Json | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
@@ -360,11 +476,14 @@ export type Database = {
           country: string | null
           created_at: string
           description: string | null
+          end_date: string | null
           funding_goal: number | null
           funds_raised: number
           id: string
+          image_url: string | null
           owner_id: string
           risk_score: string | null
+          sector: string | null
           status: string
           title: string
           updated_at: string
@@ -375,11 +494,14 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          end_date?: string | null
           funding_goal?: number | null
           funds_raised?: number
           id?: string
+          image_url?: string | null
           owner_id: string
           risk_score?: string | null
+          sector?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -390,14 +512,50 @@ export type Database = {
           country?: string | null
           created_at?: string
           description?: string | null
+          end_date?: string | null
           funding_goal?: number | null
           funds_raised?: number
           id?: string
+          image_url?: string | null
           owner_id?: string
           risk_score?: string | null
+          sector?: string | null
           status?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sectors: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          name_ar: string | null
+          name_en: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          name_ar?: string | null
+          name_en?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          name_ar?: string | null
+          name_en?: string | null
         }
         Relationships: []
       }
@@ -529,6 +687,21 @@ export type Database = {
       }
     }
     Views: {
+      payment_history: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          currency: string | null
+          id: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          project_title: string | null
+          service_type: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
       payments_secure: {
         Row: {
           amount: number | null
