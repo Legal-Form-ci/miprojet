@@ -8,10 +8,10 @@ export const Hero = () => {
   const { t } = useLanguage();
 
   const highlights = [
-    "Structuration selon norme ISO 21500",
-    "Validation avant financement",
-    "Accompagnement end-to-end",
-    "Label qualité MIPROJET",
+    t('hero.highlight1'),
+    t('hero.highlight2'),
+    t('hero.highlight3'),
+    t('hero.highlight4'),
   ];
 
   return (
@@ -23,19 +23,16 @@ export const Hero = () => {
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Left Content */}
           <div className="space-y-6 sm:space-y-8 text-primary-foreground text-center lg:text-left">
-            {/* Title - properly wrapped */}
+            {/* Title - New from PDF */}
             <div className="space-y-2">
               <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight">
-                <span className="block">Plateforme Panafricaine de</span>
-                <span className="text-accent block mt-1">Structuration et de Financement</span>
-                <span className="block mt-1">de Projets</span>
+                <span className="block">{t('hero.titleLine1')}</span>
+                <span className="text-accent block mt-1">{t('hero.titleLine2')}</span>
               </h1>
             </div>
             
             <p className="text-sm sm:text-base md:text-lg text-primary-foreground/90 leading-relaxed max-w-xl mx-auto lg:mx-0">
-              MIPROJET accompagne les entrepreneurs africains dans la structuration professionnelle 
-              de leurs projets selon les normes ISO 21500. Notre expertise transforme vos idées 
-              en dossiers bancables.
+              {t('hero.description')}
             </p>
 
             {/* Highlights - responsive grid */}
@@ -53,23 +50,23 @@ export const Hero = () => {
               <div className="space-y-1">
                 <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
                   <TrendingUp className="h-4 w-4 text-accent" />
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">150+</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">500+</span>
                 </div>
-                <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.projectsFinanced')}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.projectsStructured')}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
                   <Users className="h-4 w-4 text-accent" />
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">2K+</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">5K+</span>
                 </div>
                 <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.activeMembers')}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
                   <Shield className="h-4 w-4 text-accent" />
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">92%</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">12</span>
                 </div>
-                <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.successRate')}</p>
+                <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.countriesCovered')}</p>
               </div>
             </div>
 
@@ -77,7 +74,7 @@ export const Hero = () => {
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <Link to="/submit-project" className="w-full sm:w-auto">
                 <Button size="lg" variant="premium" className="w-full">
-                  {t('hero.startProject')}
+                  {t('hero.submitProject')}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
@@ -105,12 +102,12 @@ export const Hero = () => {
             </div>
             {/* Floating Cards */}
             <div className="absolute -bottom-6 -left-6 bg-card p-4 rounded-xl shadow-elegant animate-fade-in">
-              <p className="text-sm text-muted-foreground">Label Qualité</p>
+              <p className="text-sm text-muted-foreground">{t('hero.qualityLabel')}</p>
               <p className="text-2xl font-bold text-success">Score A</p>
             </div>
             <div className="absolute -top-6 -right-6 bg-card p-4 rounded-xl shadow-elegant animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <p className="text-sm text-muted-foreground">Fonds mobilisés</p>
-              <p className="text-2xl font-bold text-primary">850M+ FCFA</p>
+              <p className="text-sm text-muted-foreground">{t('hero.projectsAccompanied')}</p>
+              <p className="text-2xl font-bold text-primary">2 Mds+ FCFA</p>
             </div>
           </div>
         </div>

@@ -26,8 +26,6 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminInit from "./pages/admin/AdminInit";
 import ServiceRequest from "./pages/ServiceRequest";
 import ProjectDetail from "./pages/ProjectDetail";
-import Crowdfunding from "./pages/Crowdfunding";
-import FundingMobilization from "./pages/services/FundingMobilization";
 
 // Lazy load service and payment pages
 const StructuringService = lazy(() => import("./pages/services/StructuringService"));
@@ -68,7 +66,6 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
-            <Route path="/crowdfunding" element={<Crowdfunding />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/guide" element={<Guide />} />
@@ -82,7 +79,6 @@ const App = () => (
             
             {/* Service pages */}
             <Route path="/services" element={<Services />} />
-            <Route path="/services/funding-mobilization" element={<FundingMobilization />} />
             <Route path="/services/structuration" element={
               <Suspense fallback={<PageLoader />}>
                 <StructuringService />

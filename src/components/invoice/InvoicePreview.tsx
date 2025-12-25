@@ -12,6 +12,7 @@ interface InvoiceItem {
 
 interface InvoicePreviewProps {
   invoiceData: {
+    invoiceNumber?: string;
     clientName: string;
     clientEmail: string;
     clientPhone: string;
@@ -26,7 +27,6 @@ interface InvoicePreviewProps {
   total: number;
   onBack: () => void;
   onPrint: () => void;
-  invoiceNumber?: string;
 }
 
 export const InvoicePreview = ({
@@ -36,9 +36,9 @@ export const InvoicePreview = ({
   total,
   onBack,
   onPrint,
-  invoiceNumber = `MIP-${new Date().getFullYear()}-XXXXX`
 }: InvoicePreviewProps) => {
   const [downloading, setDownloading] = useState(false);
+  const invoiceNumber = invoiceData.invoiceNumber || `MIP-${new Date().getFullYear()}-XXXXX`;
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const currentDate = new Date().toLocaleDateString('fr-FR', {
