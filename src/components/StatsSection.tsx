@@ -57,14 +57,13 @@ export const StatsSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
 
-  // Updated stats - "Fonds mobilisés" reformulated to "Projets accompagnés vers des financements estimés à"
+  // Updated stats with realistic values
   const stats: StatItem[] = [
-    { icon: TrendingUp, value: 500, suffix: "+", labelKey: 'stats.projectsStructured', color: "text-primary" },
-    { icon: Users, value: 5000, suffix: "+", labelKey: 'stats.activeMembers', color: "text-secondary" },
-    { icon: Globe, value: 12, suffix: "", labelKey: 'stats.countriesCovered', color: "text-accent" },
-    { icon: Award, value: 95, suffix: "%", labelKey: 'stats.successRate', color: "text-success" },
-    { icon: Building, value: 150, suffix: "+", labelKey: 'stats.partners', color: "text-info" },
-    { icon: Briefcase, value: 2, suffix: " Mds FCFA", labelKey: 'stats.estimatedFunding', color: "text-warning" },
+    { icon: TrendingUp, value: 105, suffix: "+", labelKey: 'stats.projectsStructured', color: "text-primary" },
+    { icon: Users, value: 65, suffix: "+", labelKey: 'stats.activeMembers', color: "text-secondary" },
+    { icon: Globe, value: 5, suffix: "", labelKey: 'stats.countriesCovered', color: "text-accent" },
+    { icon: Building, value: 15, suffix: "+", labelKey: 'stats.partners', color: "text-info" },
+    { icon: Briefcase, value: 1.2, suffix: " Mds FCFA", labelKey: 'stats.estimatedFunding', color: "text-warning" },
   ];
 
   useEffect(() => {

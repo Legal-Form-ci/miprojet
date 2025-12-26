@@ -17,7 +17,7 @@ interface FormProgress<T = Record<string, unknown>> {
   isSaving: boolean;
 }
 
-export function useFormProgress<T extends Record<string, unknown>>({
+export function useFormProgress<T extends object>({
   formType,
   totalSteps,
   onComplete

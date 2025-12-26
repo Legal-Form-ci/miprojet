@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, ArrowLeft, Building2, CheckCircle, Upload, Send, FileText } from "lucide-react";
+import { useFormProgress } from "@/hooks/useFormProgress";
+import { ArrowRight, ArrowLeft, Building2, CheckCircle, Upload, Send, Loader2, Save } from "lucide-react";
+
+interface EnterpriseFormData {
+  companyName: string;
+  companyType: string;
+  sector: string;
+  yearCreated: string;
+  employees: string;
+  annualRevenue: string;
+  description: string;
+  challenges: string;
+  objectives: string;
+  accompagnementTypes: string[];
+  fundingNeeded: string;
+  hasFinancialStatements: boolean;
+  hasBusinessPlan: boolean;
+  files: string[];
+}
 
 const companyTypes = [
   { value: 'sarl', label: 'SARL' },
@@ -28,7 +47,7 @@ const sectors = [
   "Transport", "Tourisme", "Finance", "Environnement", "Autre"
 ];
 
-const accompagnementTypes = [
+const accompagnementTypesList = [
   { value: 'strategic', label: 'Conseil stratégique', description: 'Définition de la vision et de la stratégie de croissance' },
   { value: 'operational', label: 'Accompagnement opérationnel', description: 'Amélioration des processus et de la productivité' },
   { value: 'financial', label: 'Restructuration financière', description: 'Optimisation de la structure financière' },
@@ -37,48 +56,50 @@ const accompagnementTypes = [
   { value: 'funding', label: 'Levée de fonds', description: 'Accompagnement pour trouver des investisseurs' },
 ];
 
+const TOTAL_STEPS = 4;
+
 export const EnterpriseForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
-  const [currentStep, setCurrentStep] = useState(1);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [files, setFiles] = useState<File[]>([]);
-  
-  const [formData, setFormData] = useState({
-    companyName: '',
-    companyType: '',
-    sector: '',
-    yearCreated: '',
-    employees: '',
-    annualRevenue: '',
-    description: '',
-    challenges: '',
-    objectives: '',
-    accompagnementTypes: [] as string[],
-    fundingNeeded: '',
-    hasFinancialStatements: false,
-    hasBusinessPlan: false,
+
+  const {
+    currentStep,
+    data: formData,
+    isLoading,
+    isSaving,
+    saveProgress,
+    nextStep,
+    prevStep,
+    complete,
+    updateField
+  } = useFormProgress<EnterpriseFormData>({
+    formType: 'enterprise_accompaniment',
+    totalSteps: TOTAL_STEPS,
+    onComplete: () => navigate("/dashboard")
   });
 
-  const totalSteps = 4;
-  const progress = (currentStep / totalSteps) * 100;
+  const progress = (currentStep / TOTAL_STEPS) * 100;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setFiles(Array.from(e.target.files));
-    }
-  };
+  const handleFieldChange = useCallback((field: keyof EnterpriseFormData, value: unknown) => {
+    updateField(field, value);
+  }, [updateField]);
 
   const toggleAccompagnementType = (value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      accompagnementTypes: prev.accompagnementTypes.includes(value)
-        ? prev.accompagnementTypes.filter(t => t !== value)
-        : [...prev.accompagnementTypes, value]
-    }));
+    const current = formData.accompagnementTypes || [];
+    const newTypes = current.includes(value)
+      ? current.filter(t => t !== value)
+      : [...current, value];
+    handleFieldChange('accompagnementTypes', newTypes);
   };
+
+  const handleSaveProgress = useCallback(async () => {
+    await saveProgress(formData, currentStep);
+    toast({
+      title: "Progression sauvegardée",
+      description: "Vos données ont été enregistrées.",
+    });
+  }, [formData, currentStep, saveProgress, toast]);
 
   const handleSubmit = async () => {
     if (!user) {
@@ -90,8 +111,6 @@ export const EnterpriseForm = () => {
       navigate("/auth");
       return;
     }
-
-    setIsSubmitting(true);
 
     try {
       const { error } = await supabase.from("service_requests").insert({
@@ -105,39 +124,49 @@ export const EnterpriseForm = () => {
         annual_revenue: formData.annualRevenue ? parseFloat(formData.annualRevenue) : null,
         has_business_plan: formData.hasBusinessPlan,
         has_financial_statements: formData.hasFinancialStatements,
-        documents: files.map(f => f.name),
+        documents: formData.files || [],
         status: 'pending',
       });
 
       if (error) throw error;
 
+      await complete(formData);
+
       toast({
         title: "Demande envoyée",
         description: "Votre demande d'accompagnement entreprise a été soumise avec succès.",
       });
-
-      navigate("/dashboard");
     } catch (error: any) {
       toast({
         title: "Erreur",
         description: error.message || "Une erreur est survenue.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, totalSteps));
-  const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
+  const handleNextStep = async () => {
+    await nextStep(formData);
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="w-full max-w-3xl mx-auto">
+        <CardContent className="py-12 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Chargement de votre progression...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="space-y-2">
         <Label>Nom de l'entreprise *</Label>
         <Input
-          value={formData.companyName}
-          onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+          value={formData.companyName || ''}
+          onChange={(e) => handleFieldChange('companyName', e.target.value)}
           placeholder="Ex: KOFFI & Associés SARL"
         />
       </div>
@@ -145,7 +174,7 @@ export const EnterpriseForm = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Forme juridique *</Label>
-          <Select value={formData.companyType} onValueChange={(v) => setFormData({ ...formData, companyType: v })}>
+          <Select value={formData.companyType || ''} onValueChange={(v) => handleFieldChange('companyType', v)}>
             <SelectTrigger className="bg-background"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
             <SelectContent className="bg-popover">
               {companyTypes.map((t) => (
@@ -156,7 +185,7 @@ export const EnterpriseForm = () => {
         </div>
         <div className="space-y-2">
           <Label>Secteur d'activité *</Label>
-          <Select value={formData.sector} onValueChange={(v) => setFormData({ ...formData, sector: v })}>
+          <Select value={formData.sector || ''} onValueChange={(v) => handleFieldChange('sector', v)}>
             <SelectTrigger className="bg-background"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
             <SelectContent className="bg-popover">
               {sectors.map((s) => (
@@ -172,16 +201,16 @@ export const EnterpriseForm = () => {
           <Label>Année de création</Label>
           <Input
             type="number"
-            value={formData.yearCreated}
-            onChange={(e) => setFormData({ ...formData, yearCreated: e.target.value })}
+            value={formData.yearCreated || ''}
+            onChange={(e) => handleFieldChange('yearCreated', e.target.value)}
             placeholder="Ex: 2018"
           />
         </div>
         <div className="space-y-2">
           <Label>Nombre d'employés</Label>
           <Input
-            value={formData.employees}
-            onChange={(e) => setFormData({ ...formData, employees: e.target.value })}
+            value={formData.employees || ''}
+            onChange={(e) => handleFieldChange('employees', e.target.value)}
             placeholder="Ex: 25"
           />
         </div>
@@ -189,8 +218,8 @@ export const EnterpriseForm = () => {
           <Label>CA annuel (FCFA)</Label>
           <Input
             type="number"
-            value={formData.annualRevenue}
-            onChange={(e) => setFormData({ ...formData, annualRevenue: e.target.value })}
+            value={formData.annualRevenue || ''}
+            onChange={(e) => handleFieldChange('annualRevenue', e.target.value)}
             placeholder="Ex: 150000000"
           />
         </div>
@@ -199,8 +228,8 @@ export const EnterpriseForm = () => {
       <div className="space-y-2">
         <Label>Description de l'entreprise *</Label>
         <Textarea
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          value={formData.description || ''}
+          onChange={(e) => handleFieldChange('description', e.target.value)}
           placeholder="Présentez votre entreprise, ses activités principales, ses produits/services..."
           className="min-h-[120px]"
         />
@@ -213,8 +242,8 @@ export const EnterpriseForm = () => {
       <div className="space-y-2">
         <Label>Défis actuels de l'entreprise</Label>
         <Textarea
-          value={formData.challenges}
-          onChange={(e) => setFormData({ ...formData, challenges: e.target.value })}
+          value={formData.challenges || ''}
+          onChange={(e) => handleFieldChange('challenges', e.target.value)}
           placeholder="Quels sont les principaux défis auxquels votre entreprise fait face?"
           className="min-h-[100px]"
         />
@@ -223,8 +252,8 @@ export const EnterpriseForm = () => {
       <div className="space-y-2">
         <Label>Objectifs de croissance</Label>
         <Textarea
-          value={formData.objectives}
-          onChange={(e) => setFormData({ ...formData, objectives: e.target.value })}
+          value={formData.objectives || ''}
+          onChange={(e) => handleFieldChange('objectives', e.target.value)}
           placeholder="Quels sont vos objectifs à court, moyen et long terme?"
           className="min-h-[100px]"
         />
@@ -234,8 +263,8 @@ export const EnterpriseForm = () => {
         <Label>Besoin de financement (FCFA)</Label>
         <Input
           type="number"
-          value={formData.fundingNeeded}
-          onChange={(e) => setFormData({ ...formData, fundingNeeded: e.target.value })}
+          value={formData.fundingNeeded || ''}
+          onChange={(e) => handleFieldChange('fundingNeeded', e.target.value)}
           placeholder="Ex: 200000000"
         />
       </div>
@@ -252,16 +281,16 @@ export const EnterpriseForm = () => {
       </div>
 
       <div className="space-y-3">
-        {accompagnementTypes.map((type) => (
+        {accompagnementTypesList.map((type) => (
           <div
             key={type.value}
             className={`flex items-start space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
-              formData.accompagnementTypes.includes(type.value) ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
+              (formData.accompagnementTypes || []).includes(type.value) ? 'border-primary bg-primary/5' : 'hover:bg-muted/50'
             }`}
             onClick={() => toggleAccompagnementType(type.value)}
           >
             <Checkbox
-              checked={formData.accompagnementTypes.includes(type.value)}
+              checked={(formData.accompagnementTypes || []).includes(type.value)}
               onCheckedChange={() => toggleAccompagnementType(type.value)}
             />
             <div>
@@ -277,16 +306,16 @@ export const EnterpriseForm = () => {
         <div className="flex items-center space-x-2">
           <Checkbox
             id="financials"
-            checked={formData.hasFinancialStatements}
-            onCheckedChange={(checked) => setFormData({ ...formData, hasFinancialStatements: checked === true })}
+            checked={formData.hasFinancialStatements || false}
+            onCheckedChange={(checked) => handleFieldChange('hasFinancialStatements', checked === true)}
           />
           <Label htmlFor="financials" className="cursor-pointer">États financiers des 3 dernières années</Label>
         </div>
         <div className="flex items-center space-x-2">
           <Checkbox
             id="businessPlan"
-            checked={formData.hasBusinessPlan}
-            onCheckedChange={(checked) => setFormData({ ...formData, hasBusinessPlan: checked === true })}
+            checked={formData.hasBusinessPlan || false}
+            onCheckedChange={(checked) => handleFieldChange('hasBusinessPlan', checked === true)}
           />
           <Label htmlFor="businessPlan" className="cursor-pointer">Business Plan / Plan stratégique</Label>
         </div>
@@ -303,29 +332,8 @@ export const EnterpriseForm = () => {
         </p>
         <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors">
           <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <Input
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-            id="file-upload"
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-          />
-          <Label htmlFor="file-upload" className="cursor-pointer">
-            <span className="text-primary hover:underline">Cliquez pour ajouter des fichiers</span>
-            <p className="text-sm text-muted-foreground mt-2">PDF, Word, Excel, PowerPoint (max 10MB)</p>
-          </Label>
+          <p className="text-muted-foreground">Fonctionnalité d'upload disponible prochainement</p>
         </div>
-        {files.length > 0 && (
-          <div className="mt-4 space-y-2">
-            {files.map((file, index) => (
-              <div key={index} className="flex items-center gap-2 text-sm bg-muted p-2 rounded">
-                <FileText className="h-4 w-4" />
-                {file.name}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <Card className="bg-muted/50">
@@ -337,8 +345,8 @@ export const EnterpriseForm = () => {
             <p><span className="font-medium">CA annuel :</span> {formData.annualRevenue ? `${parseInt(formData.annualRevenue).toLocaleString()} FCFA` : "Non renseigné"}</p>
             <p><span className="font-medium">Types d'accompagnement :</span></p>
             <ul className="ml-4 space-y-1">
-              {formData.accompagnementTypes.map(type => {
-                const typeInfo = accompagnementTypes.find(t => t.value === type);
+              {(formData.accompagnementTypes || []).map(type => {
+                const typeInfo = accompagnementTypesList.find(t => t.value === type);
                 return (
                   <li key={type} className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success" />
@@ -373,19 +381,29 @@ export const EnterpriseForm = () => {
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Building2 className="h-6 w-6 text-primary" />
-          Accompagnement Entreprise
-        </CardTitle>
-        <CardDescription>
-          Service dédié aux entreprises existantes cherchant un accompagnement stratégique
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-6 w-6 text-primary" />
+              Accompagnement Entreprise
+            </CardTitle>
+            <CardDescription>
+              Service dédié aux entreprises existantes cherchant un accompagnement stratégique
+            </CardDescription>
+          </div>
+          {isSaving && (
+            <Badge variant="secondary" className="gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Sauvegarde...
+            </Badge>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Progress */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Étape {currentStep} sur {totalSteps}</span>
+            <span>Étape {currentStep} sur {TOTAL_STEPS}</span>
             <span>{stepTitles[currentStep - 1]}</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -396,30 +414,34 @@ export const EnterpriseForm = () => {
 
         {/* Navigation */}
         <div className="flex justify-between pt-6 border-t">
-          <Button
-            variant="outline"
-            onClick={prevStep}
-            disabled={currentStep === 1}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Précédent
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Précédent
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={handleSaveProgress}
+              disabled={isSaving}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Sauvegarder
+            </Button>
+          </div>
 
-          {currentStep < totalSteps ? (
-            <Button onClick={nextStep} disabled={!formData.companyName && currentStep === 1}>
+          {currentStep < TOTAL_STEPS ? (
+            <Button onClick={handleNextStep} disabled={!formData.companyName && currentStep === 1 || isSaving}>
               Suivant
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? (
-                "Envoi en cours..."
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  Soumettre la demande
-                </>
-              )}
+            <Button onClick={handleSubmit} disabled={isSaving}>
+              <Send className="mr-2 h-4 w-4" />
+              Soumettre la demande
             </Button>
           )}
         </div>
