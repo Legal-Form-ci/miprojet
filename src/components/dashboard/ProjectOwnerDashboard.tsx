@@ -7,9 +7,10 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { InvoiceHistory } from "@/components/dashboard/InvoiceHistory";
 import {
   FolderKanban, DollarSign, FileText, MessageSquare, Plus,
-  Eye, Settings, Clock, CheckCircle, TrendingUp, ArrowRight
+  Eye, Settings, Clock, CheckCircle, Receipt, ArrowRight
 } from "lucide-react";
 
 interface Project {
@@ -194,9 +195,10 @@ export const ProjectOwnerDashboard = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="projects" className="space-y-4">
-        <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
+        <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex">
           <TabsTrigger value="projects" className="text-xs sm:text-sm">Projets</TabsTrigger>
           <TabsTrigger value="requests" className="text-xs sm:text-sm">Demandes</TabsTrigger>
+          <TabsTrigger value="invoices" className="text-xs sm:text-sm">Factures</TabsTrigger>
           <TabsTrigger value="messages" className="text-xs sm:text-sm">Messages</TabsTrigger>
         </TabsList>
 
@@ -289,6 +291,10 @@ export const ProjectOwnerDashboard = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="invoices">
+          <InvoiceHistory />
         </TabsContent>
 
         <TabsContent value="messages">

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Eye, EyeOff, Loader2, CheckCircle } from "lucide-react";
-import logoMiprojet from "@/assets/logo-miprojet.jpg";
+import logoMiprojet from "@/assets/logo-miprojet-new.png";
 
 const AdminInit = () => {
   const navigate = useNavigate();
@@ -64,50 +64,61 @@ const AdminInit = () => {
     setLoading(true);
 
     try {
-      // 1. Create the admin user account
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
+      // Try using edge function for more reliable admin creation
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        // Fallback to client-side creation
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              first_name: formData.firstName,
+              last_name: formData.lastName,
+              phone: formData.phone,
+            },
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("Échec de la création du compte");
+
+        // Wait for trigger
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        // Update profile
+        await supabase
+          .from('profiles')
+          .update({
             first_name: formData.firstName,
             last_name: formData.lastName,
             phone: formData.phone,
-          }
-        }
-      });
+            is_verified: true,
+            user_type: 'admin'
+          })
+          .eq('id', authData.user.id);
 
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("Échec de la création du compte");
+        // Assign admin role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: authData.user.id,
+            role: 'admin'
+          });
 
-      // Wait a moment for the trigger to create the profile
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 2. Update the profile with additional info
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          phone: formData.phone,
-          is_verified: true,
-          user_type: 'admin'
-        })
-        .eq('id', authData.user.id);
-
-      if (profileError) {
-        console.error('Profile update error:', profileError);
+        if (roleError) throw roleError;
       }
-
-      // 3. Assign admin role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
-          role: 'admin'
-        });
-
-      if (roleError) throw roleError;
 
       setStep("complete");
       toast({
@@ -140,6 +151,7 @@ const AdminInit = () => {
       setLoading(false);
     }
   };
+
 
   if (checking) {
     return (
