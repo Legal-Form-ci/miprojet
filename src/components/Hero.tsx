@@ -45,26 +45,26 @@ export const Hero = () => {
               ))}
             </div>
 
-            {/* Stats - responsive */}
+          {/* Stats - responsive */}
             <div className="grid grid-cols-3 gap-3 sm:gap-6 py-4 sm:py-6">
               <div className="space-y-1">
                 <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
                   <TrendingUp className="h-4 w-4 text-accent" />
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">500+</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">105+</span>
                 </div>
                 <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.projectsStructured')}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
                   <Users className="h-4 w-4 text-accent" />
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">5K+</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">65+</span>
                 </div>
                 <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.activeMembers')}</p>
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1 sm:gap-2 justify-center lg:justify-start">
                   <Shield className="h-4 w-4 text-accent" />
-                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">12</span>
+                  <span className="text-xl sm:text-2xl md:text-3xl font-bold">5</span>
                 </div>
                 <p className="text-[10px] sm:text-xs md:text-sm text-primary-foreground/80">{t('hero.countriesCovered')}</p>
               </div>
@@ -107,7 +107,7 @@ export const Hero = () => {
             </div>
             <div className="absolute -top-6 -right-6 bg-card p-4 rounded-xl shadow-elegant animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <p className="text-sm text-muted-foreground">{t('hero.projectsAccompanied')}</p>
-              <p className="text-2xl font-bold text-primary">2 Mds+ FCFA</p>
+              <p className="text-2xl font-bold text-primary">1,2 Mds FCFA</p>
             </div>
           </div>
         </div>

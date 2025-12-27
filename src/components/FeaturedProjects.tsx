@@ -1,76 +1,88 @@
 import { ProjectCard } from "./ProjectCard";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const projects = [
   {
-    title: "Plateforme E-commerce Artisanat Local",
-    description: "Marketplace digitale pour artisans sénégalais avec paiement mobile intégré",
-    category: "Tech",
-    location: "Abidjan, Côte d'Ivoire",
-    fundingGoal: 5000000,
-    currentFunding: 3750000,
-    backers: 142,
-    daysLeft: 15,
-    score: "A" as const,
-    image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop",
-  },
-  {
-    title: "Ferme Avicole Moderne",
-    description: "Production d'œufs et poulets bio avec techniques d'élevage durables",
+    title: "Ferme Avicole Moderne Durable",
+    description: "Production d'œufs et poulets bio avec techniques d'élevage durables en Côte d'Ivoire",
     category: "Agriculture",
     location: "Abidjan, Côte d'Ivoire",
-    fundingGoal: 8000000,
-    currentFunding: 6400000,
-    backers: 89,
-    daysLeft: 22,
+    fundingType: "Investissement en capital",
+    status: "validated" as const,
     score: "A" as const,
     image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&h=400&fit=crop",
   },
   {
-    title: "École de Formation Numérique",
-    description: "Centre de formation en développement web et design pour jeunes",
+    title: "Centre de Formation Numérique",
+    description: "Formation en développement web et design pour jeunes au Togo",
     category: "Éducation",
     location: "Lomé, Togo",
-    fundingGoal: 3000000,
-    currentFunding: 2100000,
-    backers: 67,
-    daysLeft: 8,
+    fundingType: "Bailleurs / Subventions",
+    status: "in_structuring" as const,
     score: "B" as const,
     image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=400&fit=crop",
+  },
+  {
+    title: "Coopérative Agricole Bio",
+    description: "Mutualisation des ressources pour agriculteurs biologiques au Sénégal",
+    category: "Agriculture",
+    location: "Dakar, Sénégal",
+    fundingType: "Partenariat / Association",
+    status: "oriented" as const,
+    score: "A" as const,
+    image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&h=400&fit=crop",
   },
 ];
 
 export const FeaturedProjects = () => {
+  const { t } = useLanguage();
+
   return (
-    <section className="py-24 bg-background">
+    <section className="py-16 sm:py-24 bg-background">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between mb-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 gap-4">
           <div className="space-y-2">
-            <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-              Projets en Financement
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
+              {t('projects.featuredTitle')}
             </h2>
-            <p className="text-xl text-muted-foreground">
-              Découvrez les projets validés et labellisés MIPROJET
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+              {t('projects.featuredSubtitle')}
             </p>
           </div>
-          <Button variant="outline" className="hidden md:flex">
-            Voir tous les projets
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          <Link to="/projects" className="hidden md:flex">
+            <Button variant="outline">
+              {t('projects.viewAll')}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {projects.map((project) => (
             <ProjectCard key={project.title} {...project} />
           ))}
         </div>
 
-        <div className="mt-12 text-center md:hidden">
-          <Button variant="outline" className="w-full sm:w-auto">
-            Voir tous les projets
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+        {/* Important Notice */}
+        <Alert className="mt-8 sm:mt-12 bg-muted/50 border-warning/30">
+          <AlertCircle className="h-4 w-4 text-warning" />
+          <AlertTitle className="text-sm sm:text-base">{t('projects.notice.title')}</AlertTitle>
+          <AlertDescription className="text-xs sm:text-sm text-muted-foreground">
+            {t('projects.notice.description')}
+          </AlertDescription>
+        </Alert>
+
+        <div className="mt-8 sm:mt-12 text-center md:hidden">
+          <Link to="/projects">
+            <Button variant="outline" className="w-full sm:w-auto">
+              {t('projects.viewAll')}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
