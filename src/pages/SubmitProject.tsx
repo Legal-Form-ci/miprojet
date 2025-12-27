@@ -8,12 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { useFormProgress } from "@/hooks/useFormProgress";
 import { 
   Upload, ArrowRight, ArrowLeft, CheckCircle, 
-  FileText, Target, Users, DollarSign, Send
+  FileText, Target, Users, DollarSign, Send, AlertCircle,
+  Building, MapPin, Clock, Shield, Briefcase
 } from "lucide-react";
 
 const setMeta = (title: string, description: string) => {
@@ -23,9 +28,61 @@ const setMeta = (title: string, description: string) => {
   meta.content = description;
 };
 
-const categories = [
-  "Agriculture", "Tech & Digital", "Éducation", "Santé", "Commerce", 
-  "Industrie", "Services", "Artisanat", "Énergie", "Immobilier", "Autre"
+const sectors = [
+  "Agriculture / Agroalimentaire",
+  "Industrie",
+  "Services",
+  "Énergie / Environnement",
+  "Éducation",
+  "Santé",
+  "Immobilier",
+  "Numérique / Innovation",
+  "Autre"
+];
+
+const profileTypes = [
+  "Entrepreneur",
+  "Association / ONG",
+  "Coopérative",
+  "Start-up",
+  "Autre"
+];
+
+const fundingTypes = [
+  "Donateurs",
+  "Bailleurs / Subventions",
+  "Prêt / Financement bancaire",
+  "Investissement en capital",
+  "Partenariat / Association"
+];
+
+const projectDurations = [
+  "< 6 mois",
+  "6 – 12 mois",
+  "12 – 24 mois",
+  "> 24 mois"
+];
+
+const projectStages = [
+  "Idée",
+  "Projet en structuration",
+  "Projet pilote / test",
+  "Activité existante à développer"
+];
+
+const riskTypes = [
+  "Financiers",
+  "Techniques",
+  "Organisationnels",
+  "Juridiques"
+];
+
+const documentTypes = [
+  "Note conceptuelle",
+  "Business plan",
+  "Étude de faisabilité",
+  "Présentation PowerPoint",
+  "Autres documents"
 ];
 
 const countries = [
@@ -34,15 +91,18 @@ const countries = [
 ];
 
 const steps = [
-  { id: 1, title: "Informations de base", icon: FileText },
-  { id: 2, title: "Détails du projet", icon: Target },
-  { id: 3, title: "Équipe", icon: Users },
-  { id: 4, title: "Financement", icon: DollarSign },
-  { id: 5, title: "Documents", icon: Upload },
+  { id: 1, title: "Identification du porteur", icon: Users },
+  { id: 2, title: "Identification du projet", icon: FileText },
+  { id: 3, title: "Description (ISO 21500)", icon: Target },
+  { id: 4, title: "Données financières", icon: DollarSign },
+  { id: 5, title: "Financement & Maturité", icon: Briefcase },
+  { id: 6, title: "Impact & Risques", icon: Shield },
+  { id: 7, title: "Équipe & Documents", icon: Upload },
 ];
 
 const SubmitProject = () => {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,30 +110,66 @@ const SubmitProject = () => {
   const [files, setFiles] = useState<File[]>([]);
   
   const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "",
+    // Step 1 - Porteur
+    fullName: "",
+    organization: "",
     country: "",
     city: "",
-    problem: "",
-    solution: "",
-    targetMarket: "",
-    teamSize: "",
+    phone: "",
+    email: "",
+    profileType: "",
+    profileTypeOther: "",
+    
+    // Step 2 - Projet identification
+    projectTitle: "",
+    sector: "",
+    sectorOther: "",
+    projectLocation: "",
+    projectDuration: "",
+    
+    // Step 3 - Description ISO 21500
+    executiveSummary: "",
+    problemIdentified: "",
+    generalObjective: "",
+    specificObjectives: "",
+    projectScope: "",
+    expectedDeliverables: "",
+    keyResources: "",
+    
+    // Step 4 - Données financières
+    estimatedBudget: "",
+    
+    // Step 5 - Financement & Maturité
+    fundingType: "",
+    projectStage: "",
+    hasPreviousFunding: "",
+    previousFundingDetails: "",
+    
+    // Step 6 - Impact & Risques
+    directBeneficiaries: "",
+    expectedImpact: "",
+    identifiedRisks: [] as string[],
+    
+    // Step 7 - Équipe & Documents
     teamDescription: "",
-    fundingGoal: "",
-    fundingUse: "",
-    timeline: "",
-    revenue: "",
+    availableDocuments: [] as string[],
+    certifyAccuracy: false,
+    acceptTerms: false,
   });
+
+  const { saveProgress } = useFormProgress('project_submission');
 
   useEffect(() => {
     setMeta(
-      "Soumettre un Projet | MIPROJET",
-      "Soumettez votre projet pour structuration et financement. Processus en 5 étapes simple et guidé."
+      t('submitProject.pageTitle') || "Soumettre un Projet | MIPROJET",
+      t('submitProject.pageDescription') || "Soumettez votre projet pour structuration professionnelle selon les normes ISO 21500."
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        setFormData(prev => ({ ...prev, email: session.user.email || "" }));
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
@@ -81,7 +177,13 @@ const SubmitProject = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [t]);
+
+  useEffect(() => {
+    if (user) {
+      saveProgress(formData, currentStep);
+    }
+  }, [formData, currentStep, user]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -99,11 +201,20 @@ const SubmitProject = () => {
   const handleSubmit = async () => {
     if (!user) {
       toast({
-        title: "Connexion requise",
-        description: "Veuillez vous connecter pour soumettre un projet.",
+        title: t('submitProject.loginRequired'),
+        description: t('submitProject.loginRequiredDesc'),
         variant: "destructive",
       });
       navigate("/auth");
+      return;
+    }
+
+    if (!formData.certifyAccuracy || !formData.acceptTerms) {
+      toast({
+        title: t('submitProject.acceptTermsRequired'),
+        description: t('submitProject.acceptTermsRequiredDesc'),
+        variant: "destructive",
+      });
       return;
     }
 
@@ -112,31 +223,44 @@ const SubmitProject = () => {
     try {
       const { data, error } = await supabase.from("projects").insert({
         owner_id: user.id,
-        title: formData.title,
-        description: `${formData.description}\n\nProblème: ${formData.problem}\n\nSolution: ${formData.solution}\n\nMarché cible: ${formData.targetMarket}\n\nÉquipe: ${formData.teamDescription}\n\nUtilisation des fonds: ${formData.fundingUse}`,
-        category: formData.category,
+        title: formData.projectTitle,
+        description: `${formData.executiveSummary}\n\nProblème: ${formData.problemIdentified}\n\nObjectif: ${formData.generalObjective}\n\nObjectifs spécifiques: ${formData.specificObjectives}\n\nPérimètre: ${formData.projectScope}\n\nLivrables: ${formData.expectedDeliverables}\n\nRessources: ${formData.keyResources}`,
+        category: formData.sector === "Autre" ? formData.sectorOther : formData.sector,
+        sector: formData.sector,
         country: formData.country,
         city: formData.city,
-        funding_goal: parseFloat(formData.fundingGoal) || 0,
+        funding_goal: parseFloat(formData.estimatedBudget) || 0,
         status: "draft",
       }).select().single();
 
       if (error) throw error;
+
+      // Also create a service request
+      await supabase.from("service_requests").insert({
+        user_id: user.id,
+        service_type: "structuration",
+        company_name: formData.organization,
+        sector: formData.sector,
+        project_stage: formData.projectStage,
+        funding_needed: parseFloat(formData.estimatedBudget) || 0,
+        description: formData.executiveSummary,
+        has_business_plan: formData.availableDocuments.includes("Business plan"),
+      });
 
       if (files.length > 0 && data) {
         await uploadFiles(data.id);
       }
 
       toast({
-        title: "Projet soumis !",
-        description: "Votre projet a été soumis avec succès. Notre équipe l'examinera sous 48h.",
+        title: t('submitProject.success'),
+        description: t('submitProject.successDesc'),
       });
 
       navigate("/dashboard");
     } catch (error: any) {
       toast({
-        title: "Erreur",
-        description: error.message || "Une erreur est survenue.",
+        title: t('common.error'),
+        description: error.message || t('submitProject.errorDesc'),
         variant: "destructive",
       });
     } finally {
@@ -144,51 +268,40 @@ const SubmitProject = () => {
     }
   };
 
-  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 5));
+  const nextStep = () => setCurrentStep((prev) => Math.min(prev + 1, 7));
   const prevStep = () => setCurrentStep((prev) => Math.max(prev - 1, 1));
 
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">Nom du projet *</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Ex: Ferme Avicole Moderne"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description courte *</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Décrivez votre projet en quelques phrases..."
-                className="min-h-[100px]"
-                required
-              />
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Catégorie *</Label>
-                <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="fullName">{t('submitProject.fullName')} *</Label>
+                <Input
+                  id="fullName"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  placeholder="Ex: Inocent KOFFI"
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label>Pays *</Label>
+                <Label htmlFor="organization">{t('submitProject.organization')}</Label>
+                <Input
+                  id="organization"
+                  value={formData.organization}
+                  onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                  placeholder={t('submitProject.organizationPlaceholder')}
+                />
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('common.country')} *</Label>
                 <Select value={formData.country} onValueChange={(v) => setFormData({ ...formData, country: v })}>
-                  <SelectTrigger><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
                   <SelectContent>
                     {countries.map((c) => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
@@ -196,158 +309,390 @@ const SubmitProject = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">{t('common.city')} *</Label>
+                <Input
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="Ex: Abidjan"
+                />
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">{t('common.phone')} *</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="+225 07 00 00 00 00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('common.email')} *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="email@example.com"
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="city">Ville</Label>
-              <Input
-                id="city"
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                placeholder="Ex: Abidjan"
-              />
+              <Label>{t('submitProject.profileType')} *</Label>
+              <Select value={formData.profileType} onValueChange={(v) => setFormData({ ...formData, profileType: v })}>
+                <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
+                <SelectContent>
+                  {profileTypes.map((p) => (
+                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {formData.profileType === "Autre" && (
+                <Input
+                  className="mt-2"
+                  value={formData.profileTypeOther}
+                  onChange={(e) => setFormData({ ...formData, profileTypeOther: e.target.value })}
+                  placeholder={t('submitProject.specifyOther')}
+                />
+              )}
             </div>
           </div>
         );
+      
       case 2:
         return (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="problem">Problème à résoudre *</Label>
-              <Textarea
-                id="problem"
-                value={formData.problem}
-                onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
-                placeholder="Quel problème votre projet résout-il ?"
-                className="min-h-[100px]"
+              <Label htmlFor="projectTitle">{t('submitProject.projectTitle')} *</Label>
+              <Input
+                id="projectTitle"
+                value={formData.projectTitle}
+                onChange={(e) => setFormData({ ...formData, projectTitle: e.target.value })}
+                placeholder={t('submitProject.projectTitlePlaceholder')}
+                required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="solution">Votre solution *</Label>
-              <Textarea
-                id="solution"
-                value={formData.solution}
-                onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
-                placeholder="Comment votre projet résout-il ce problème ?"
-                className="min-h-[100px]"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="targetMarket">Marché cible *</Label>
-              <Textarea
-                id="targetMarket"
-                value={formData.targetMarket}
-                onChange={(e) => setFormData({ ...formData, targetMarket: e.target.value })}
-                placeholder="Qui sont vos clients cibles ?"
-                className="min-h-[80px]"
-              />
-            </div>
-          </div>
-        );
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="teamSize">Taille de l'équipe *</Label>
-              <Select value={formData.teamSize} onValueChange={(v) => setFormData({ ...formData, teamSize: v })}>
-                <SelectTrigger><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+              <Label>{t('submitProject.sector')} *</Label>
+              <Select value={formData.sector} onValueChange={(v) => setFormData({ ...formData, sector: v })}>
+                <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 personne (solo)</SelectItem>
-                  <SelectItem value="2-5">2-5 personnes</SelectItem>
-                  <SelectItem value="6-10">6-10 personnes</SelectItem>
-                  <SelectItem value="10+">Plus de 10 personnes</SelectItem>
+                  {sectors.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="teamDescription">Présentation de l'équipe *</Label>
+              <Label htmlFor="projectLocation">{t('submitProject.projectLocation')} *</Label>
+              <Input
+                id="projectLocation"
+                value={formData.projectLocation}
+                onChange={(e) => setFormData({ ...formData, projectLocation: e.target.value })}
+                placeholder={t('submitProject.projectLocationPlaceholder')}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('submitProject.projectDuration')} *</Label>
+              <Select value={formData.projectDuration} onValueChange={(v) => setFormData({ ...formData, projectDuration: v })}>
+                <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
+                <SelectContent>
+                  {projectDurations.map((d) => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        );
+      
+      case 3:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="executiveSummary">{t('submitProject.executiveSummary')} *</Label>
+              <Textarea
+                id="executiveSummary"
+                value={formData.executiveSummary}
+                onChange={(e) => setFormData({ ...formData, executiveSummary: e.target.value })}
+                placeholder={t('submitProject.executiveSummaryPlaceholder')}
+                className="min-h-[100px]"
+                maxLength={1500}
+              />
+              <p className="text-xs text-muted-foreground">{t('submitProject.maxWords')}</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="problemIdentified">{t('submitProject.problemIdentified')} *</Label>
+              <Textarea
+                id="problemIdentified"
+                value={formData.problemIdentified}
+                onChange={(e) => setFormData({ ...formData, problemIdentified: e.target.value })}
+                placeholder={t('submitProject.problemIdentifiedPlaceholder')}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="generalObjective">{t('submitProject.generalObjective')} *</Label>
+              <Textarea
+                id="generalObjective"
+                value={formData.generalObjective}
+                onChange={(e) => setFormData({ ...formData, generalObjective: e.target.value })}
+                placeholder={t('submitProject.generalObjectivePlaceholder')}
+                className="min-h-[60px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="specificObjectives">{t('submitProject.specificObjectives')}</Label>
+              <Textarea
+                id="specificObjectives"
+                value={formData.specificObjectives}
+                onChange={(e) => setFormData({ ...formData, specificObjectives: e.target.value })}
+                placeholder={t('submitProject.specificObjectivesPlaceholder')}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="projectScope">{t('submitProject.projectScope')}</Label>
+              <Textarea
+                id="projectScope"
+                value={formData.projectScope}
+                onChange={(e) => setFormData({ ...formData, projectScope: e.target.value })}
+                placeholder={t('submitProject.projectScopePlaceholder')}
+                className="min-h-[60px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expectedDeliverables">{t('submitProject.expectedDeliverables')}</Label>
+              <Textarea
+                id="expectedDeliverables"
+                value={formData.expectedDeliverables}
+                onChange={(e) => setFormData({ ...formData, expectedDeliverables: e.target.value })}
+                placeholder={t('submitProject.expectedDeliverablesPlaceholder')}
+                className="min-h-[60px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="keyResources">{t('submitProject.keyResources')}</Label>
+              <Textarea
+                id="keyResources"
+                value={formData.keyResources}
+                onChange={(e) => setFormData({ ...formData, keyResources: e.target.value })}
+                placeholder={t('submitProject.keyResourcesPlaceholder')}
+                className="min-h-[60px]"
+              />
+            </div>
+          </div>
+        );
+      
+      case 4:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="estimatedBudget">{t('submitProject.estimatedBudget')} *</Label>
+              <Input
+                id="estimatedBudget"
+                type="number"
+                value={formData.estimatedBudget}
+                onChange={(e) => setFormData({ ...formData, estimatedBudget: e.target.value })}
+                placeholder="Ex: 50000000"
+              />
+              <p className="text-xs text-muted-foreground">{t('submitProject.budgetNote')}</p>
+            </div>
+          </div>
+        );
+      
+      case 5:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-2">
+              <Label>{t('submitProject.fundingType')} *</Label>
+              <Select value={formData.fundingType} onValueChange={(v) => setFormData({ ...formData, fundingType: v })}>
+                <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
+                <SelectContent>
+                  {fundingTypes.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Alert className="mt-2 bg-muted/50">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  {t('submitProject.fundingTypeNote')}
+                </AlertDescription>
+              </Alert>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('submitProject.projectStage')} *</Label>
+              <Select value={formData.projectStage} onValueChange={(v) => setFormData({ ...formData, projectStage: v })}>
+                <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
+                <SelectContent>
+                  {projectStages.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('submitProject.hasPreviousFunding')} *</Label>
+              <Select value={formData.hasPreviousFunding} onValueChange={(v) => setFormData({ ...formData, hasPreviousFunding: v })}>
+                <SelectTrigger><SelectValue placeholder={t('common.select')} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="yes">{t('common.yes')}</SelectItem>
+                  <SelectItem value="no">{t('common.no')}</SelectItem>
+                </SelectContent>
+              </Select>
+              {formData.hasPreviousFunding === "yes" && (
+                <Textarea
+                  className="mt-2"
+                  value={formData.previousFundingDetails}
+                  onChange={(e) => setFormData({ ...formData, previousFundingDetails: e.target.value })}
+                  placeholder={t('submitProject.previousFundingDetailsPlaceholder')}
+                />
+              )}
+            </div>
+          </div>
+        );
+      
+      case 6:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="directBeneficiaries">{t('submitProject.directBeneficiaries')} *</Label>
+              <Textarea
+                id="directBeneficiaries"
+                value={formData.directBeneficiaries}
+                onChange={(e) => setFormData({ ...formData, directBeneficiaries: e.target.value })}
+                placeholder={t('submitProject.directBeneficiariesPlaceholder')}
+                className="min-h-[60px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expectedImpact">{t('submitProject.expectedImpact')}</Label>
+              <Textarea
+                id="expectedImpact"
+                value={formData.expectedImpact}
+                onChange={(e) => setFormData({ ...formData, expectedImpact: e.target.value })}
+                placeholder={t('submitProject.expectedImpactPlaceholder')}
+                className="min-h-[80px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('submitProject.identifiedRisks')} *</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {riskTypes.map((risk) => (
+                  <div key={risk} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={risk}
+                      checked={formData.identifiedRisks.includes(risk)}
+                      onCheckedChange={(checked) => {
+                        setFormData({
+                          ...formData,
+                          identifiedRisks: checked
+                            ? [...formData.identifiedRisks, risk]
+                            : formData.identifiedRisks.filter((r) => r !== risk)
+                        });
+                      }}
+                    />
+                    <Label htmlFor={risk} className="text-sm">{risk}</Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 7:
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="teamDescription">{t('submitProject.teamDescription')} *</Label>
               <Textarea
                 id="teamDescription"
                 value={formData.teamDescription}
                 onChange={(e) => setFormData({ ...formData, teamDescription: e.target.value })}
-                placeholder="Présentez les membres clés de votre équipe et leurs compétences..."
-                className="min-h-[150px]"
-              />
-            </div>
-          </div>
-        );
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="fundingGoal">Montant recherché (FCFA) *</Label>
-              <Input
-                id="fundingGoal"
-                type="number"
-                value={formData.fundingGoal}
-                onChange={(e) => setFormData({ ...formData, fundingGoal: e.target.value })}
-                placeholder="Ex: 5000000"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="fundingUse">Utilisation des fonds *</Label>
-              <Textarea
-                id="fundingUse"
-                value={formData.fundingUse}
-                onChange={(e) => setFormData({ ...formData, fundingUse: e.target.value })}
-                placeholder="Comment allez-vous utiliser les fonds levés ?"
+                placeholder={t('submitProject.teamDescriptionPlaceholder')}
                 className="min-h-[100px]"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="timeline">Calendrier prévisionnel</Label>
-              <Input
-                id="timeline"
-                value={formData.timeline}
-                onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-                placeholder="Ex: Lancement dans 6 mois"
-              />
+              <Label>{t('submitProject.availableDocuments')}</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {documentTypes.map((doc) => (
+                  <div key={doc} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={doc}
+                      checked={formData.availableDocuments.includes(doc)}
+                      onCheckedChange={(checked) => {
+                        setFormData({
+                          ...formData,
+                          availableDocuments: checked
+                            ? [...formData.availableDocuments, doc]
+                            : formData.availableDocuments.filter((d) => d !== doc)
+                        });
+                      }}
+                    />
+                    <Label htmlFor={doc} className="text-sm">{doc}</Label>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="revenue">Revenus actuels (si applicable)</Label>
+            <div className="border-2 border-dashed border-border rounded-lg p-6 sm:p-8 text-center">
+              <Upload className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-4" />
               <Input
-                id="revenue"
-                value={formData.revenue}
-                onChange={(e) => setFormData({ ...formData, revenue: e.target.value })}
-                placeholder="Ex: 500 000 FCFA/mois"
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="hidden"
+                id="file-upload"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.png"
               />
+              <Label htmlFor="file-upload" className="cursor-pointer">
+                <span className="text-primary hover:underline">{t('submitProject.uploadFiles')}</span>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-2">{t('submitProject.uploadFormats')}</p>
+              </Label>
             </div>
-          </div>
-        );
-      case 5:
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label>Documents de support</Label>
-              <p className="text-sm text-muted-foreground mb-4">
-                Ajoutez des documents pour renforcer votre dossier : business plan, étude de marché, CV de l'équipe, etc.
-              </p>
-              <div className="border-2 border-dashed border-border rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <Input
-                  type="file"
-                  multiple
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-upload"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.png"
+            {files.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">{t('submitProject.selectedFiles')}</p>
+                {files.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <FileText className="h-4 w-4" />
+                    {file.name}
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="certifyAccuracy"
+                  checked={formData.certifyAccuracy}
+                  onCheckedChange={(checked) => setFormData({ ...formData, certifyAccuracy: !!checked })}
                 />
-                <Label htmlFor="file-upload" className="cursor-pointer">
-                  <span className="text-primary hover:underline">Cliquez pour ajouter des fichiers</span>
-                  <p className="text-sm text-muted-foreground mt-2">PDF, Word, Excel, PowerPoint, Images (max 10MB)</p>
+                <Label htmlFor="certifyAccuracy" className="text-sm leading-relaxed">
+                  {t('submitProject.certifyAccuracy')}
                 </Label>
               </div>
-              {files.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  <p className="text-sm font-medium">Fichiers sélectionnés :</p>
-                  {files.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <FileText className="h-4 w-4" />
-                      {file.name}
-                    </div>
-                  ))}
-                </div>
-              )}
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="acceptTerms"
+                  checked={formData.acceptTerms}
+                  onCheckedChange={(checked) => setFormData({ ...formData, acceptTerms: !!checked })}
+                />
+                <Label htmlFor="acceptTerms" className="text-sm leading-relaxed">
+                  {t('submitProject.acceptTerms')}
+                </Label>
+              </div>
             </div>
+            <Alert className="bg-muted/50">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">
+                {t('submitProject.legalNotice')}
+              </AlertDescription>
+            </Alert>
           </div>
         );
       default:
@@ -360,16 +705,16 @@ const SubmitProject = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <main className="container mx-auto px-4 pt-24 pb-16">
-          <Card className="max-w-lg mx-auto text-center p-8">
+          <Card className="max-w-lg mx-auto text-center p-6 sm:p-8">
             <CardHeader>
-              <CardTitle>Connexion requise</CardTitle>
+              <CardTitle>{t('submitProject.loginRequired')}</CardTitle>
               <CardDescription>
-                Vous devez être connecté pour soumettre un projet
+                {t('submitProject.loginRequiredDesc')}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Button variant="hero" onClick={() => navigate("/auth")}>
-                Se connecter / S'inscrire
+                {t('nav.login')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </CardContent>
@@ -384,29 +729,31 @@ const SubmitProject = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <main className="pt-24 pb-16">
+      <main className="pt-20 sm:pt-24 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
             {/* Header */}
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Soumettre un projet</h1>
-              <p className="text-muted-foreground">
-                Complétez le formulaire en 5 étapes pour soumettre votre projet à l'évaluation
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+                {t('submitProject.title')}
+              </h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                {t('submitProject.subtitle')}
               </p>
             </div>
 
             {/* Progress */}
-            <div className="mb-8">
-              <Progress value={(currentStep / 5) * 100} className="h-2" />
-              <div className="flex justify-between mt-4">
+            <div className="mb-6 sm:mb-8">
+              <Progress value={(currentStep / 7) * 100} className="h-2" />
+              <div className="flex justify-between mt-4 overflow-x-auto pb-2">
                 {steps.map((step) => (
                   <div
                     key={step.id}
-                    className={`flex flex-col items-center ${
+                    className={`flex flex-col items-center min-w-[60px] ${
                       step.id <= currentStep ? "text-primary" : "text-muted-foreground"
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 ${
+                    <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center mb-1 sm:mb-2 ${
                       step.id < currentStep 
                         ? "bg-primary text-primary-foreground" 
                         : step.id === currentStep 
@@ -414,12 +761,12 @@ const SubmitProject = () => {
                           : "bg-muted"
                     }`}>
                       {step.id < currentStep ? (
-                        <CheckCircle className="h-5 w-5" />
+                        <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5" />
                       ) : (
-                        <step.icon className="h-5 w-5" />
+                        <step.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                       )}
                     </div>
-                    <span className="text-xs hidden md:block">{step.title}</span>
+                    <span className="text-[10px] sm:text-xs hidden sm:block text-center">{step.title}</span>
                   </div>
                 ))}
               </div>
@@ -428,33 +775,35 @@ const SubmitProject = () => {
             {/* Form */}
             <Card>
               <CardHeader>
-                <CardTitle>{steps[currentStep - 1].title}</CardTitle>
+                <CardTitle className="text-lg sm:text-xl">{steps[currentStep - 1].title}</CardTitle>
               </CardHeader>
               <CardContent>
                 {renderStep()}
 
-                <div className="flex justify-between mt-8">
+                <div className="flex justify-between mt-6 sm:mt-8 gap-4">
                   <Button
                     variant="outline"
                     onClick={prevStep}
                     disabled={currentStep === 1}
+                    className="flex-1 sm:flex-none"
                   >
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Précédent
+                    {t('common.previous')}
                   </Button>
 
-                  {currentStep < 5 ? (
-                    <Button variant="hero" onClick={nextStep}>
-                      Suivant
+                  {currentStep < 7 ? (
+                    <Button variant="hero" onClick={nextStep} className="flex-1 sm:flex-none">
+                      {t('common.next')}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   ) : (
                     <Button 
                       variant="hero" 
                       onClick={handleSubmit}
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !formData.certifyAccuracy || !formData.acceptTerms}
+                      className="flex-1 sm:flex-none"
                     >
-                      {isSubmitting ? "Envoi en cours..." : "Soumettre le projet"}
+                      {isSubmitting ? t('common.loading') : t('common.submit')}
                       <Send className="ml-2 h-4 w-4" />
                     </Button>
                   )}
@@ -464,7 +813,7 @@ const SubmitProject = () => {
           </div>
         </div>
       </main>
-
+      
       <Footer />
     </div>
   );
