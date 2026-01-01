@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.money-fusion-webhook]
 verify_jwt = false
+
+[functions.create-admin]
+verify_jwt = false

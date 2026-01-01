@@ -26,25 +26,18 @@ serve(async (req) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // Check if admin already exists
-    const { data: existingRoles, error: checkError } = await supabaseAdmin
-      .from('user_roles')
-      .select('id')
-      .eq('role', 'admin')
-      .limit(1);
+    const adminData: AdminData = await req.json();
 
-    if (checkError) {
-      throw new Error(`Error checking admin: ${checkError.message}`);
-    }
-
-    if (existingRoles && existingRoles.length > 0) {
+    // Check if this specific email already exists as admin
+    const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers();
+    const emailExists = existingUser?.users?.some(u => u.email === adminData.email);
+    
+    if (emailExists) {
       return new Response(
-        JSON.stringify({ success: false, message: "Admin already exists" }),
+        JSON.stringify({ success: false, message: "This email already exists" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
-
-    const adminData: AdminData = await req.json();
 
     // Create admin user with service role
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({

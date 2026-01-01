@@ -18,6 +18,7 @@ import { AdminProjectsTable } from "@/components/admin/AdminProjectsTable";
 import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
 import { AdminCharts } from "@/components/admin/AdminCharts";
 import { AdminRequestsTable } from "@/components/admin/AdminRequestsTable";
+import { AdminKPICharts } from "@/components/admin/AdminKPICharts";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
@@ -108,6 +109,7 @@ const AdminDashboard = () => {
               </div>
               
               <AdminStats />
+              <AdminKPICharts />
               <AdminCharts />
             </TabsContent>
             
