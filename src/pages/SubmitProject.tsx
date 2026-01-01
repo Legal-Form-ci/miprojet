@@ -157,7 +157,10 @@ const SubmitProject = () => {
     acceptTerms: false,
   });
 
-  const { saveProgress } = useFormProgress('project_submission');
+  const { saveProgress } = useFormProgress({
+    formType: 'project_submission',
+    totalSteps: 7
+  });
 
   useEffect(() => {
     setMeta(
