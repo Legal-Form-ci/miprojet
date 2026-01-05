@@ -7,9 +7,10 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import {
   LayoutDashboard, FolderKanban, FileText, DollarSign,
-  MessageSquare, Settings, LogOut, Menu, Bell, Search,
+  MessageSquare, Settings, LogOut, Menu, Search,
   Building2, Users, TrendingUp, CreditCard, FileCheck,
   HelpCircle, ChevronRight, Home
 } from "lucide-react";
@@ -75,7 +76,6 @@ export const DashboardLayout = ({ children, userType = 'individual' }: Dashboard
   const location = useLocation();
   const [profile, setProfile] = useState<any>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notifications, setNotifications] = useState(3);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -214,14 +214,7 @@ export const DashboardLayout = ({ children, userType = 'individual' }: Dashboard
 
             {/* Right Actions */}
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
-                    {notifications}
-                  </span>
-                )}
-              </Button>
+              <NotificationBell />
 
               <div className="flex items-center gap-3 pl-3 border-l border-border/50">
                 <Avatar className="h-9 w-9">
