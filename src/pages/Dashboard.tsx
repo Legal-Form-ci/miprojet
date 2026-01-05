@@ -11,7 +11,7 @@ type UserType = 'individual' | 'enterprise' | 'investor' | 'funder';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, isAdmin } = useAuth();
   const [userType, setUserType] = useState<UserType>('individual');
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -20,10 +20,15 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
+    if (!authLoading) {
+      if (!user) {
+        navigate('/auth');
+      } else if (isAdmin) {
+        // Redirect admins to admin dashboard
+        navigate('/admin');
+      }
     }
-  }, [authLoading, user, navigate]);
+  }, [authLoading, user, isAdmin, navigate]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -41,8 +46,10 @@ const Dashboard = () => {
       setProfileLoading(false);
     };
 
-    fetchProfile();
-  }, [user]);
+    if (user && !isAdmin) {
+      fetchProfile();
+    }
+  }, [user, isAdmin]);
 
   if (authLoading || profileLoading) {
     return (
@@ -52,7 +59,7 @@ const Dashboard = () => {
     );
   }
 
-  if (!user) return null;
+  if (!user || isAdmin) return null;
 
   const renderDashboardContent = () => {
     switch (userType) {

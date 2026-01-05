@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useKkiapay } from "@/hooks/useKkiapay";
+import { useNotifications } from "@/hooks/useNotifications";
 import { 
-  CreditCard, Smartphone, Wallet, Shield, 
+  CreditCard, Shield, 
   CheckCircle, Loader2 
 } from "lucide-react";
 
@@ -17,31 +18,102 @@ interface PaymentModalProps {
   projectId?: string;
   projectTitle?: string;
   minAmount?: number;
+  serviceRequestId?: string;
 }
-
-const paymentMethods = [
-  { id: "orange", name: "Orange Money", icon: Smartphone, color: "bg-orange-500" },
-  { id: "mtn", name: "MTN Mobile Money", icon: Smartphone, color: "bg-yellow-500" },
-  { id: "wave", name: "Wave", icon: Wallet, color: "bg-blue-500" },
-  { id: "moov", name: "Moov Money", icon: Smartphone, color: "bg-cyan-500" },
-  { id: "card", name: "Carte bancaire", icon: CreditCard, color: "bg-gray-700" },
-];
 
 export const PaymentModal = ({ 
   isOpen, 
   onClose, 
   projectId, 
   projectTitle = "Contribution",
-  minAmount = 1000 
+  minAmount = 1000,
+  serviceRequestId
 }: PaymentModalProps) => {
   const { toast } = useToast();
+  const { createNotification, createAdminNotification } = useNotifications();
   const [step, setStep] = useState(1);
   const [amount, setAmount] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentPaymentRef, setCurrentPaymentRef] = useState<string | null>(null);
 
   const predefinedAmounts = [5000, 10000, 25000, 50000, 100000];
+
+  const handlePaymentSuccess = async (data: { transactionId: string }) => {
+    console.log('Payment success:', data);
+    setIsProcessing(false);
+    
+    try {
+      // Update payment record with transaction ID
+      if (currentPaymentRef) {
+        await supabase
+          .from('payments')
+          .update({ 
+            status: 'completed',
+            payment_reference: data.transactionId,
+          })
+          .eq('payment_reference', currentPaymentRef);
+      }
+
+      // Get current user for notification
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        // Create user notification
+        await createNotification({
+          userId: user.id,
+          title: 'Paiement réussi',
+          message: `Votre paiement de ${parseFloat(amount).toLocaleString()} FCFA a été confirmé.`,
+          type: 'success',
+          link: '/dashboard',
+        });
+
+        // Notify admins
+        await createAdminNotification({
+          title: 'Nouveau paiement reçu',
+          message: `Un paiement de ${parseFloat(amount).toLocaleString()} FCFA a été effectué pour ${projectTitle}.`,
+          type: 'success',
+          link: '/admin',
+        });
+      }
+
+      setStep(3);
+      toast({
+        title: "Paiement réussi !",
+        description: `Votre paiement de ${parseFloat(amount).toLocaleString()} FCFA a été confirmé.`,
+      });
+    } catch (error) {
+      console.error('Error updating payment:', error);
+    }
+  };
+
+  const handlePaymentFailed = async (data: any) => {
+    console.log('Payment failed:', data);
+    setIsProcessing(false);
+    
+    // Update payment status to failed
+    if (currentPaymentRef) {
+      await supabase
+        .from('payments')
+        .update({ status: 'failed' })
+        .eq('payment_reference', currentPaymentRef);
+    }
+
+    toast({
+      title: "Paiement échoué",
+      description: "Une erreur est survenue. Veuillez réessayer.",
+      variant: "destructive",
+    });
+  };
+
+  const { openPayment } = useKkiapay({
+    onSuccess: handlePaymentSuccess,
+    onFailed: handlePaymentFailed,
+    onClose: () => {
+      if (isProcessing) {
+        setIsProcessing(false);
+      }
+    },
+  });
 
   const handlePayment = async () => {
     const numericAmount = parseFloat(amount);
@@ -50,24 +122,6 @@ export const PaymentModal = ({
       toast({
         title: "Montant invalide",
         description: `Le montant minimum est de ${minAmount.toLocaleString()} FCFA`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!paymentMethod) {
-      toast({
-        title: "Méthode de paiement requise",
-        description: "Veuillez sélectionner une méthode de paiement",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (paymentMethod !== "card" && !phoneNumber) {
-      toast({
-        title: "Numéro requis",
-        description: "Veuillez entrer votre numéro de téléphone",
         variant: "destructive",
       });
       return;
@@ -84,59 +138,71 @@ export const PaymentModal = ({
           description: "Veuillez vous connecter pour effectuer un paiement",
           variant: "destructive",
         });
+        setIsProcessing(false);
         return;
       }
 
-      // Call the FedaPay payment edge function
-      const { data, error } = await supabase.functions.invoke('fedapay-payment', {
-        body: {
-          amount: numericAmount,
-          currency: 'XOF',
-          description: `Contribution - ${projectTitle}`,
-          projectId: projectId,
-          userId: user.id,
-          customer: {
-            phone: phoneNumber,
-          },
-          callbackUrl: `${window.location.origin}/dashboard?payment=success`,
+      // Get user profile for name and email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, phone')
+        .eq('id', user.id)
+        .single();
+
+      // Generate payment reference
+      const paymentRef = `MIP-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+      setCurrentPaymentRef(paymentRef);
+
+      // Create payment record in database
+      const { error: paymentError } = await supabase.from('payments').insert({
+        user_id: user.id,
+        amount: numericAmount,
+        payment_method: 'kkiapay',
+        payment_reference: paymentRef,
+        status: 'pending',
+        project_id: projectId || null,
+        service_request_id: serviceRequestId || null,
+        currency: 'XOF',
+        metadata: {
+          project_title: projectTitle,
         },
       });
 
-      if (error) throw error;
-
-      if (!data?.success) {
-        throw new Error(data?.error || 'Échec de l\'initiation du paiement');
+      if (paymentError) {
+        throw paymentError;
       }
 
-      // If we have a payment URL, redirect to it
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
-        return;
-      }
-
-      // Payment initiated successfully
-      setStep(3);
-      toast({
-        title: "Paiement initié",
-        description: `Veuillez confirmer le paiement de ${numericAmount.toLocaleString()} FCFA.`,
+      // Open KKIAPAY widget
+      openPayment({
+        amount: numericAmount,
+        reason: `Paiement MIPROJET - ${projectTitle}`,
+        name: profile ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() : undefined,
+        email: user.email,
+        phone: profile?.phone || undefined,
+        data: JSON.stringify({ 
+          paymentRef, 
+          projectId, 
+          serviceRequestId,
+          userId: user.id 
+        }),
       });
+
     } catch (error) {
       console.error('Payment error:', error);
+      setIsProcessing(false);
       toast({
-        title: "Erreur de paiement",
-        description: error instanceof Error ? error.message : "Une erreur est survenue. Veuillez réessayer.",
+        title: "Erreur",
+        description: "Une erreur est survenue. Veuillez réessayer.",
         variant: "destructive",
       });
-    } finally {
-      setIsProcessing(false);
     }
   };
 
   const resetModal = () => {
     setStep(1);
     setAmount("");
-    setPaymentMethod("");
-    setPhoneNumber("");
+    setCurrentPaymentRef(null);
+    setIsProcessing(false);
     onClose();
   };
 
@@ -144,13 +210,12 @@ export const PaymentModal = ({
     <Dialog open={isOpen} onOpenChange={resetModal}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {step === 3 ? "Paiement réussi !" : `Contribuer à ${projectTitle}`}
+          <DialogTitle className="text-foreground">
+            {step === 3 ? "Paiement réussi !" : `Payer pour ${projectTitle}`}
           </DialogTitle>
           <DialogDescription>
-            {step === 1 && "Choisissez le montant de votre contribution"}
-            {step === 2 && "Sélectionnez votre méthode de paiement"}
-            {step === 3 && "Merci pour votre soutien !"}
+            {step === 1 && "Choisissez le montant de votre paiement"}
+            {step === 3 && "Merci pour votre confiance !"}
           </DialogDescription>
         </DialogHeader>
 
@@ -170,7 +235,7 @@ export const PaymentModal = ({
             </div>
 
             <div className="space-y-2">
-              <Label>Ou entrez un montant personnalisé</Label>
+              <Label className="text-foreground">Ou entrez un montant personnalisé</Label>
               <div className="relative">
                 <Input
                   type="number"
@@ -186,77 +251,36 @@ export const PaymentModal = ({
               <p className="text-xs text-muted-foreground">Minimum: {minAmount.toLocaleString()} FCFA</p>
             </div>
 
-            <Button 
-              variant="hero" 
-              className="w-full"
-              onClick={() => setStep(2)}
-              disabled={!amount || parseFloat(amount) < minAmount}
-            >
-              Continuer
-            </Button>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="space-y-6">
             <div className="p-4 bg-muted rounded-lg">
-              <p className="text-sm text-muted-foreground">Montant à payer</p>
-              <p className="text-2xl font-bold text-foreground">
-                {parseFloat(amount).toLocaleString()} FCFA
+              <div className="flex items-center gap-3 mb-3">
+                <CreditCard className="h-5 w-5 text-primary" />
+                <span className="font-medium text-foreground">Méthodes de paiement acceptées</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Mobile Money (Orange, MTN, Moov, Wave), Carte bancaire (Visa, Mastercard)
               </p>
             </div>
 
-            <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-              {paymentMethods.map((method) => (
-                <div key={method.id} className="flex items-center space-x-3 p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer">
-                  <RadioGroupItem value={method.id} id={method.id} />
-                  <div className={`p-2 rounded-lg ${method.color}`}>
-                    <method.icon className="h-4 w-4 text-white" />
-                  </div>
-                  <Label htmlFor={method.id} className="cursor-pointer flex-1">
-                    {method.name}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-
-            {paymentMethod && paymentMethod !== "card" && (
-              <div className="space-y-2">
-                <Label htmlFor="phone">Numéro de téléphone</Label>
-                <Input
-                  id="phone"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+225 XX XX XX XX XX"
-                />
-              </div>
-            )}
-
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4 text-success" />
-              <span>Paiement sécurisé par FedaPay</span>
+              <span>Paiement sécurisé par KKIAPAY</span>
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
-                Retour
-              </Button>
-              <Button 
-                variant="hero" 
-                onClick={handlePayment}
-                disabled={isProcessing}
-                className="flex-1"
-              >
-                {isProcessing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Traitement...
-                  </>
-                ) : (
-                  "Payer"
-                )}
-              </Button>
-            </div>
+            <Button 
+              variant="default" 
+              className="w-full bg-primary hover:bg-primary/90"
+              onClick={handlePayment}
+              disabled={!amount || parseFloat(amount) < minAmount || isProcessing}
+            >
+              {isProcessing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Traitement...
+                </>
+              ) : (
+                `Payer ${amount ? parseFloat(amount).toLocaleString() : '0'} FCFA`
+              )}
+            </Button>
           </div>
         )}
 
@@ -266,12 +290,12 @@ export const PaymentModal = ({
               <CheckCircle className="h-8 w-8 text-success" />
             </div>
             <div>
-              <p className="text-xl font-semibold mb-2">Merci pour votre contribution !</p>
+              <p className="text-xl font-semibold mb-2 text-foreground">Merci pour votre paiement !</p>
               <p className="text-muted-foreground">
                 Votre paiement de {parseFloat(amount).toLocaleString()} FCFA a été enregistré avec succès.
               </p>
             </div>
-            <Button variant="hero" onClick={resetModal} className="w-full">
+            <Button variant="default" onClick={resetModal} className="w-full">
               Fermer
             </Button>
           </div>

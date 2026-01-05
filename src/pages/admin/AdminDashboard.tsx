@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { 
-  LayoutDashboard, Users, FolderKanban, DollarSign, Settings, 
-  LogOut, TrendingUp, TrendingDown, Activity, BarChart3,
-  PieChart, Calendar, Bell, Search, Menu, X
+  LayoutDashboard, TrendingUp, TrendingDown,
+  LogOut, Search, Menu, X
 } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminStats } from "@/components/admin/AdminStats";
@@ -22,6 +22,7 @@ import { AdminKPICharts } from "@/components/admin/AdminKPICharts";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, signOut } = useAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
@@ -69,19 +70,16 @@ const AdminDashboard = () => {
         <div className="flex-1 max-w-md mx-8">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Rechercher..." className="pl-10 bg-muted/50" />
+            <Input placeholder={t('common.search') || "Rechercher..."} className="pl-10 bg-muted/50" />
           </div>
         </div>
         
         <div className="flex items-center gap-4">
-          <button className="relative p-2 hover:bg-muted rounded-lg">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-1 right-1 h-2 w-2 bg-destructive rounded-full"></span>
-          </button>
+          <NotificationBell />
           
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-sm font-medium">{user?.email}</p>
+              <p className="text-sm font-medium text-foreground">{user?.email}</p>
               <Badge variant="secondary" className="text-xs">Admin</Badge>
             </div>
             <Button variant="ghost" size="icon" onClick={signOut}>
