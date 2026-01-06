@@ -129,6 +129,39 @@ export type Database = {
           },
         ]
       }
+      faqs: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          question: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          question: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          question?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       form_progress: {
         Row: {
           created_at: string
@@ -256,6 +289,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      news: {
+        Row: {
+          archived_at: string | null
+          author_id: string
+          category: string | null
+          content: string
+          created_at: string
+          excerpt: string | null
+          id: string
+          image_url: string | null
+          is_featured: boolean | null
+          published_at: string | null
+          status: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+          views_count: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          author_id: string
+          category?: string | null
+          content: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          published_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          author_id?: string
+          category?: string | null
+          content?: string
+          created_at?: string
+          excerpt?: string | null
+          id?: string
+          image_url?: string | null
+          is_featured?: boolean | null
+          published_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          views_count?: number | null
+        }
+        Relationships: []
       }
       notifications: {
         Row: {

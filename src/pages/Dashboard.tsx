@@ -11,7 +11,7 @@ type UserType = 'individual' | 'enterprise' | 'investor' | 'funder';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading, isAdmin } = useAuth();
+  const { user, loading: authLoading, isAdmin, adminChecked } = useAuth();
   const [userType, setUserType] = useState<UserType>('individual');
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -20,15 +20,15 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!authLoading) {
+    // Only redirect after both loading and admin check are complete
+    if (!authLoading && adminChecked) {
       if (!user) {
         navigate('/auth');
       } else if (isAdmin) {
-        // Redirect admins to admin dashboard
         navigate('/admin');
       }
     }
-  }, [authLoading, user, isAdmin, navigate]);
+  }, [authLoading, adminChecked, user, isAdmin, navigate]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -46,12 +46,15 @@ const Dashboard = () => {
       setProfileLoading(false);
     };
 
-    if (user && !isAdmin) {
+    if (user && adminChecked && !isAdmin) {
       fetchProfile();
+    } else if (!user || isAdmin) {
+      setProfileLoading(false);
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, adminChecked]);
 
-  if (authLoading || profileLoading) {
+  // Show loading while checking auth or admin status
+  if (authLoading || !adminChecked || (user && !isAdmin && profileLoading)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>

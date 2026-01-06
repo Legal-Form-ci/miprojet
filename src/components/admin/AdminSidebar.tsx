@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FolderKanban, DollarSign, Settings, 
-  FileText, MessageSquare, BarChart3, Shield, Globe, Home
+  FileText, MessageSquare, BarChart3, Shield, Home, Newspaper,
+  Receipt, CreditCard, HelpCircle
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -15,8 +16,11 @@ const menuItems = [
   { id: "projects", label: "Projets", icon: FolderKanban },
   { id: "users", label: "Utilisateurs", icon: Users },
   { id: "requests", label: "Demandes", icon: FileText },
+  { id: "news", label: "Actualités", icon: Newspaper },
+  { id: "invoices", label: "Factures", icon: Receipt },
+  { id: "payments", label: "Paiements", icon: CreditCard },
   { id: "finance", label: "Finance", icon: DollarSign },
-  { id: "messages", label: "Messages", icon: MessageSquare },
+  { id: "faq", label: "FAQ", icon: HelpCircle },
   { id: "analytics", label: "Analytiques", icon: BarChart3 },
   { id: "security", label: "Sécurité", icon: Shield },
   { id: "settings", label: "Paramètres", icon: Settings },
