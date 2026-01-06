@@ -22,6 +22,7 @@ import Dashboard from "./pages/Dashboard";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
+import News from "./pages/News";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminInit from "./pages/admin/AdminInit";
 import ServiceRequest from "./pages/ServiceRequest";
@@ -109,6 +110,8 @@ const App = () => (
             {/* Other pages */}
             <Route path="/contact" element={<Contact />} />
             <Route path="/faq" element={<FAQ />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/news/:id" element={<News />} />
             
             {/* Admin */}
             <Route path="/admin/init" element={<AdminInit />} />

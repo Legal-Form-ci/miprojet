@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -7,6 +7,7 @@ interface AuthState {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  adminChecked: boolean;
 }
 
 export const useAuth = () => {
@@ -15,48 +16,10 @@ export const useAuth = () => {
     session: null,
     loading: true,
     isAdmin: false,
+    adminChecked: false,
   });
 
-  useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setAuthState(prev => ({
-          ...prev,
-          session,
-          user: session?.user ?? null,
-          loading: false,
-        }));
-        
-        // Check admin role after auth state change
-        if (session?.user) {
-          setTimeout(() => {
-            checkAdminRole(session.user.id);
-          }, 0);
-        } else {
-          setAuthState(prev => ({ ...prev, isAdmin: false }));
-        }
-      }
-    );
-
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setAuthState(prev => ({
-        ...prev,
-        session,
-        user: session?.user ?? null,
-        loading: false,
-      }));
-      
-      if (session?.user) {
-        checkAdminRole(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const checkAdminRole = async (userId: string) => {
+  const checkAdminRole = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase.rpc('has_role', {
         _user_id: userId,
@@ -64,12 +27,91 @@ export const useAuth = () => {
       });
       
       if (!error) {
-        setAuthState(prev => ({ ...prev, isAdmin: data === true }));
+        setAuthState(prev => ({ 
+          ...prev, 
+          isAdmin: data === true,
+          adminChecked: true,
+          loading: false
+        }));
+      } else {
+        console.error('Error checking admin role:', error);
+        setAuthState(prev => ({ 
+          ...prev, 
+          isAdmin: false,
+          adminChecked: true,
+          loading: false
+        }));
       }
     } catch (err) {
       console.error('Error checking admin role:', err);
+      setAuthState(prev => ({ 
+        ...prev, 
+        isAdmin: false,
+        adminChecked: true,
+        loading: false
+      }));
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+      
+      if (session?.user) {
+        setAuthState(prev => ({
+          ...prev,
+          session,
+          user: session.user,
+        }));
+        checkAdminRole(session.user.id);
+      } else {
+        setAuthState({
+          user: null,
+          session: null,
+          loading: false,
+          isAdmin: false,
+          adminChecked: true,
+        });
+      }
+    });
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (!isMounted) return;
+        
+        if (session?.user) {
+          setAuthState(prev => ({
+            ...prev,
+            session,
+            user: session.user,
+          }));
+          // Defer admin check to avoid race conditions
+          setTimeout(() => {
+            if (isMounted) {
+              checkAdminRole(session.user.id);
+            }
+          }, 0);
+        } else {
+          setAuthState({
+            user: null,
+            session: null,
+            loading: false,
+            isAdmin: false,
+            adminChecked: true,
+          });
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [checkAdminRole]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -78,11 +120,16 @@ export const useAuth = () => {
       session: null,
       loading: false,
       isAdmin: false,
+      adminChecked: true,
     });
   };
 
   return {
-    ...authState,
+    user: authState.user,
+    session: authState.session,
+    loading: authState.loading,
+    isAdmin: authState.isAdmin,
+    adminChecked: authState.adminChecked,
     signOut,
   };
 };

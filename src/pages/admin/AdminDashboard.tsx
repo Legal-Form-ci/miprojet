@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { 
-  LayoutDashboard, TrendingUp, TrendingDown,
+  LayoutDashboard, TrendingUp,
   LogOut, Search, Menu, X
 } from "lucide-react";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -19,9 +19,13 @@ import { AdminUsersTable } from "@/components/admin/AdminUsersTable";
 import { AdminCharts } from "@/components/admin/AdminCharts";
 import { AdminRequestsTable } from "@/components/admin/AdminRequestsTable";
 import { AdminKPICharts } from "@/components/admin/AdminKPICharts";
+import { AdminNewsManager } from "@/components/admin/AdminNewsManager";
+import { AdminFAQManager } from "@/components/admin/AdminFAQManager";
+import { AdminPaymentsTable } from "@/components/admin/AdminPaymentsTable";
+import { AdminInvoicesTable } from "@/components/admin/AdminInvoicesTable";
 
 const AdminDashboard = () => {
-  const { user, isAdmin, loading, signOut } = useAuth();
+  const { user, isAdmin, loading, adminChecked, signOut } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -32,14 +36,18 @@ const AdminDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
-    } else if (!loading && user && !isAdmin) {
-      navigate('/dashboard');
+    // Only redirect after both loading is complete and admin check is done
+    if (!loading && adminChecked) {
+      if (!user) {
+        navigate('/auth');
+      } else if (!isAdmin) {
+        navigate('/dashboard');
+      }
     }
-  }, [loading, user, isAdmin, navigate]);
+  }, [loading, adminChecked, user, isAdmin, navigate]);
 
-  if (loading) {
+  // Show loading while checking auth or admin status
+  if (loading || !adminChecked) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
@@ -47,7 +55,7 @@ const AdminDashboard = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!user || !isAdmin) {
     return null;
   }
 
@@ -146,6 +154,18 @@ const AdminDashboard = () => {
               <AdminRequestsTable />
             </TabsContent>
             
+            <TabsContent value="news" className="space-y-6">
+              <AdminNewsManager />
+            </TabsContent>
+            
+            <TabsContent value="invoices" className="space-y-6">
+              <AdminInvoicesTable />
+            </TabsContent>
+            
+            <TabsContent value="payments" className="space-y-6">
+              <AdminPaymentsTable />
+            </TabsContent>
+            
             <TabsContent value="finance" className="space-y-6">
               <div>
                 <h1 className="text-3xl font-bold">Finance & Transactions</h1>
@@ -196,6 +216,10 @@ const AdminDashboard = () => {
                   </CardContent>
                 </Card>
               </div>
+            </TabsContent>
+            
+            <TabsContent value="faq" className="space-y-6">
+              <AdminFAQManager />
             </TabsContent>
             
             <TabsContent value="settings" className="space-y-6">
