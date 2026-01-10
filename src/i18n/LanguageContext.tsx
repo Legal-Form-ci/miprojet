@@ -67,21 +67,21 @@ export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }
 // Update meta tags based on language
 const updateMetaTags = (lang: Language) => {
   const metaDescriptions: Record<Language, string> = {
-    fr: "La seule plateforme qui structure vos projets AVANT de les financer. Validation professionnelle, financement participatif sécurisé et accompagnement jusqu'au succès en Afrique.",
-    en: "The only platform that structures your projects BEFORE funding them. Professional validation, secure crowdfunding, and complete support for success in Africa.",
-    ar: "المنصة الوحيدة التي تهيكل مشاريعك قبل تمويلها. التحقق المهني، التمويل الجماعي الآمن، والدعم الكامل للنجاح في أفريقيا.",
-    zh: "唯一在融资前构建项目的平台。专业验证、安全众筹和非洲成功的全面支持。",
-    es: "La única plataforma que estructura tus proyectos ANTES de financiarlos. Validación profesional, crowdfunding seguro y acompañamiento completo para el éxito en África.",
-    de: "Die einzige Plattform, die Ihre Projekte VOR der Finanzierung strukturiert. Professionelle Validierung, sicheres Crowdfunding und vollständige Unterstützung für den Erfolg in Afrika.",
+    fr: "Plateforme panafricaine de structuration professionnelle de projets. MIPROJET accompagne les porteurs de projets dans la structuration selon la norme ISO 21500 et les oriente vers des partenaires adaptés.",
+    en: "Pan-African platform for professional project structuring. MIPROJET supports project owners in ISO 21500 compliant structuring and guides them to suitable partners.",
+    ar: "منصة أفريقية للهيكلة المهنية للمشاريع. MIPROJET يدعم أصحاب المشاريع في الهيكلة وفقًا لمعيار ISO 21500 ويوجههم إلى الشركاء المناسبين.",
+    zh: "泛非专业项目结构化平台。MIPROJET支持项目负责人按照ISO 21500标准进行结构化，并引导他们找到合适的合作伙伴。",
+    es: "Plataforma panafricana de estructuración profesional de proyectos. MIPROJET apoya a los emprendedores en la estructuración según la norma ISO 21500 y los orienta hacia socios adecuados.",
+    de: "Panafrikanische Plattform für professionelle Projektstrukturierung. MIPROJET unterstützt Projektinhaber bei der ISO 21500-konformen Strukturierung und leitet sie zu geeigneten Partnern.",
   };
 
   const metaTitles: Record<Language, string> = {
-    fr: "MIPROJET - Structurez, Financez, Réussissez | Plateforme Panafricaine",
-    en: "MIPROJET - Structure, Fund, Succeed | Pan-African Platform",
-    ar: "MIPROJET - هيكل، مول، نجح | منصة أفريقية",
-    zh: "MIPROJET - 构建、融资、成功 | 泛非平台",
-    es: "MIPROJET - Estructura, Financia, Triunfa | Plataforma Panafricana",
-    de: "MIPROJET - Strukturieren, Finanzieren, Erfolg | Panafrikanische Plattform",
+    fr: "MIPROJET - Structuration Professionnelle de Projets | Plateforme Panafricaine",
+    en: "MIPROJET - Professional Project Structuring | Pan-African Platform",
+    ar: "MIPROJET - هيكلة مهنية للمشاريع | منصة أفريقية",
+    zh: "MIPROJET - 专业项目结构化 | 泛非平台",
+    es: "MIPROJET - Estructuración Profesional de Proyectos | Plataforma Panafricana",
+    de: "MIPROJET - Professionelle Projektstrukturierung | Panafrikanische Plattform",
   };
 
   // Update document title
