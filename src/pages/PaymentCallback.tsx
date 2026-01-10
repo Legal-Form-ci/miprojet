@@ -4,12 +4,14 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2, ArrowRight } from "lucide-react";
+import { CheckCircle, XCircle, Loader2, ArrowRight, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 const PaymentCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user, isAdmin, adminChecked } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'failed' | 'pending'>('loading');
   const [paymentDetails, setPaymentDetails] = useState<{
     amount?: number;
@@ -27,9 +29,9 @@ const PaymentCallback = () => {
 
       console.log('Payment callback params:', { transactionId, paymentStatus, reference });
 
-      // If status is directly provided in URL
+      // If status is directly provided in URL (from KKIAPAY)
       if (paymentStatus) {
-        if (paymentStatus === 'approved' || paymentStatus === 'completed') {
+        if (paymentStatus === 'approved' || paymentStatus === 'completed' || paymentStatus === 'success') {
           setStatus('success');
         } else if (paymentStatus === 'declined' || paymentStatus === 'failed' || paymentStatus === 'canceled') {
           setStatus('failed');
@@ -42,10 +44,12 @@ const PaymentCallback = () => {
       if (transactionId || reference) {
         try {
           const searchValue = reference || transactionId;
+          
+          // Search by payment reference or transaction ID in metadata
           const { data: payments } = await supabase
             .from('payments')
             .select('*, projects(title)')
-            .or(`payment_reference.eq.${searchValue},metadata->>fedapay_transaction_id.eq.${transactionId}`)
+            .or(`payment_reference.eq.${searchValue},payment_reference.ilike.%${searchValue}%`)
             .limit(1);
 
           if (payments && payments.length > 0) {
@@ -56,6 +60,7 @@ const PaymentCallback = () => {
               projectTitle: payment.projects?.title,
             });
 
+            // Update status based on DB record if not set from URL
             if (!paymentStatus) {
               if (payment.status === 'completed') {
                 setStatus('success');
@@ -66,7 +71,7 @@ const PaymentCallback = () => {
               }
             }
           } else {
-            // No payment found, check URL status
+            // No payment found
             if (!paymentStatus) {
               setStatus('pending');
             }
@@ -78,7 +83,40 @@ const PaymentCallback = () => {
           }
         }
       } else {
-        // No transaction info at all
+        // No transaction info at all - check latest user payment
+        if (user) {
+          const { data: latestPayment } = await supabase
+            .from('payments')
+            .select('*, projects(title)')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
+
+          if (latestPayment && latestPayment.length > 0) {
+            const payment = latestPayment[0];
+            // Only show if created in the last 5 minutes
+            const createdAt = new Date(payment.created_at);
+            const now = new Date();
+            const diffMinutes = (now.getTime() - createdAt.getTime()) / (1000 * 60);
+
+            if (diffMinutes < 5) {
+              setPaymentDetails({
+                amount: payment.amount,
+                reference: payment.payment_reference,
+                projectTitle: payment.projects?.title,
+              });
+              
+              if (payment.status === 'completed') {
+                setStatus('success');
+              } else if (payment.status === 'failed') {
+                setStatus('failed');
+              } else {
+                setStatus('pending');
+              }
+              return;
+            }
+          }
+        }
         setStatus('pending');
       }
     };
@@ -86,7 +124,15 @@ const PaymentCallback = () => {
     // Small delay to allow webhook to process
     const timeout = setTimeout(checkPaymentStatus, 1500);
     return () => clearTimeout(timeout);
-  }, [searchParams]);
+  }, [searchParams, user]);
+
+  const handleDashboardRedirect = () => {
+    if (adminChecked && isAdmin) {
+      navigate('/admin');
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   const getStatusContent = () => {
     switch (status) {
@@ -114,7 +160,7 @@ const PaymentCallback = () => {
       case 'pending':
       default:
         return {
-          icon: <Loader2 className="h-16 w-16 text-warning" />,
+          icon: <Clock className="h-16 w-16 text-warning" />,
           title: "Paiement en attente",
           description: "Votre paiement est en cours de traitement. Vous recevrez une confirmation par email.",
           color: "text-warning"
@@ -173,7 +219,7 @@ const PaymentCallback = () => {
 
               <div className="flex flex-col gap-3">
                 <Button 
-                  onClick={() => navigate('/dashboard')} 
+                  onClick={handleDashboardRedirect} 
                   className="w-full"
                 >
                   Accéder au tableau de bord
