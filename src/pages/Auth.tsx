@@ -37,12 +37,25 @@ const Auth = () => {
   useEffect(() => {
     document.title = mode === "login" ? "Connexion | MIPROJET" : "Inscription | MIPROJET";
     
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data }) => {
+    // Check if user is already logged in and redirect appropriately
+    const checkSessionAndRedirect = async () => {
+      const { data } = await supabase.auth.getSession();
       if (data.session) {
-        navigate('/dashboard');
+        // Check if user is admin
+        const { data: roleData } = await supabase.rpc('has_role', {
+          _user_id: data.session.user.id,
+          _role: 'admin'
+        });
+        
+        if (roleData === true) {
+          navigate('/admin');
+        } else {
+          navigate('/dashboard');
+        }
       }
-    });
+    };
+    
+    checkSessionAndRedirect();
   }, [mode, navigate]);
 
   const validate = () => {
@@ -75,15 +88,29 @@ const Auth = () => {
     setLoading(true);
     try {
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           if (error.message.includes("Invalid login")) {
             throw new Error("Email ou mot de passe incorrect");
           }
           throw error;
         }
-        toast({ title: t('auth.loginSuccess'), description: t('auth.welcome') });
-        navigate('/dashboard');
+        
+        // Check if user is admin and redirect appropriately
+        if (authData.user) {
+          const { data: roleData } = await supabase.rpc('has_role', {
+            _user_id: authData.user.id,
+            _role: 'admin'
+          });
+          
+          toast({ title: t('auth.loginSuccess'), description: t('auth.welcome') });
+          
+          if (roleData === true) {
+            navigate('/admin');
+          } else {
+            navigate('/dashboard');
+          }
+        }
       } else {
         const redirectUrl = `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({

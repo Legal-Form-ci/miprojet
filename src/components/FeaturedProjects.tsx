@@ -5,33 +5,34 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
+// Realistic West African projects with authentic images
 const projects = [
   {
-    title: "Ferme Avicole Moderne Durable",
-    description: "Production d'œufs et poulets bio avec techniques d'élevage durables en Côte d'Ivoire",
+    title: "Ferme Avicole Moderne de Tiassalé",
+    description: "Élevage de poulets de chair et poules pondeuses avec 50,000 sujets. Production d'œufs et viande de qualité pour le marché ivoirien. Utilisation de techniques modernes d'élevage durable.",
     category: "Agriculture",
-    location: "Abidjan, Côte d'Ivoire",
+    location: "Tiassalé, Côte d'Ivoire",
     fundingType: "Investissement en capital",
     status: "validated" as const,
     score: "A" as const,
     image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&h=400&fit=crop",
   },
   {
-    title: "Centre de Formation Numérique",
-    description: "Formation en développement web et design pour jeunes au Togo",
-    category: "Éducation",
+    title: "Centre Numérique de Formation Lomé",
+    description: "Formation de 500 jeunes par an en développement web, design graphique et marketing digital. Partenariats avec des entreprises tech locales pour l'insertion professionnelle.",
+    category: "Éducation & Formation",
     location: "Lomé, Togo",
-    fundingType: "Bailleurs / Subventions",
+    fundingType: "Subvention & Partenariat",
     status: "in_structuring" as const,
     score: "B" as const,
-    image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=400&fit=crop",
+    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop",
   },
   {
-    title: "Coopérative Agricole Bio",
-    description: "Mutualisation des ressources pour agriculteurs biologiques au Sénégal",
-    category: "Agriculture",
-    location: "Dakar, Sénégal",
-    fundingType: "Partenariat / Association",
+    title: "Coopérative Agricole Bio du Sine-Saloum",
+    description: "Regroupement de 200 agriculteurs biologiques produisant riz, mil, arachide et légumes. Certification bio et exportation vers l'Europe. Irrigation solaire et conservation des sols.",
+    category: "Agriculture Bio",
+    location: "Kaolack, Sénégal",
+    fundingType: "Financement Mixte",
     status: "oriented" as const,
     score: "A" as const,
     image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&h=400&fit=crop",
@@ -46,15 +47,15 @@ export const FeaturedProjects = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 gap-4">
           <div className="space-y-2">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
               {t('projects.featuredTitle')}
             </h2>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
               {t('projects.featuredSubtitle')}
             </p>
           </div>
           <Link to="/projects" className="hidden md:flex">
-            <Button variant="outline">
+            <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
               {t('projects.viewAll')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -68,9 +69,9 @@ export const FeaturedProjects = () => {
         </div>
 
         {/* Important Notice */}
-        <Alert className="mt-8 sm:mt-12 bg-muted/50 border-warning/30">
-          <AlertCircle className="h-4 w-4 text-warning" />
-          <AlertTitle className="text-sm sm:text-base">{t('projects.notice.title')}</AlertTitle>
+        <Alert className="mt-8 sm:mt-12 bg-primary/5 border-primary/20">
+          <AlertCircle className="h-4 w-4 text-primary" />
+          <AlertTitle className="text-sm sm:text-base text-foreground">{t('projects.notice.title')}</AlertTitle>
           <AlertDescription className="text-xs sm:text-sm text-muted-foreground">
             {t('projects.notice.description')}
           </AlertDescription>
@@ -78,7 +79,7 @@ export const FeaturedProjects = () => {
 
         <div className="mt-8 sm:mt-12 text-center md:hidden">
           <Link to="/projects">
-            <Button variant="outline" className="w-full sm:w-auto">
+            <Button variant="outline" className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground">
               {t('projects.viewAll')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
