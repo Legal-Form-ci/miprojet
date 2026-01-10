@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { 
   Search, Eye, CheckCircle, XCircle, Clock, 
-  FileText, DollarSign, Building2, MoreHorizontal,
+  FileText, Building2, MoreHorizontal,
   Download
 } from "lucide-react";
 import { format } from "date-fns";
@@ -35,9 +35,7 @@ interface ServiceRequest {
 
 const SERVICE_TYPES: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
   structuring: { label: 'Structuration', icon: <FileText className="h-4 w-4" />, color: 'bg-primary/10 text-primary' },
-  funding: { label: 'Financement', icon: <DollarSign className="h-4 w-4" />, color: 'bg-success/10 text-success' },
   enterprise: { label: 'Accompagnement', icon: <Building2 className="h-4 w-4" />, color: 'bg-info/10 text-info' },
-  crowdfunding: { label: 'Crowdfunding', icon: <DollarSign className="h-4 w-4" />, color: 'bg-warning/10 text-warning' },
 };
 
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -128,7 +126,7 @@ export const AdminRequestsTable = () => {
     total: requests.length,
     pending: requests.filter(r => r.status === 'pending').length,
     approved: requests.filter(r => r.status === 'approved' || r.status === 'completed').length,
-    funding: requests.reduce((sum, r) => sum + (r.funding_needed || 0), 0)
+    budget: requests.reduce((sum, r) => sum + (r.funding_needed || 0), 0)
   };
 
   if (loading) {
@@ -165,8 +163,8 @@ export const AdminRequestsTable = () => {
         </Card>
         <Card>
           <CardContent className="pt-6">
-            <div className="text-2xl font-bold">{(stats.funding / 1000000).toFixed(1)}M</div>
-            <p className="text-sm text-muted-foreground">FCFA demandés</p>
+            <div className="text-2xl font-bold">{(stats.budget / 1000000).toFixed(1)}M</div>
+            <p className="text-sm text-muted-foreground">FCFA budget total</p>
           </CardContent>
         </Card>
       </div>
@@ -194,7 +192,6 @@ export const AdminRequestsTable = () => {
               <SelectContent>
                 <SelectItem value="">Tous les types</SelectItem>
                 <SelectItem value="structuring">Structuration</SelectItem>
-                <SelectItem value="funding">Financement</SelectItem>
                 <SelectItem value="enterprise">Accompagnement</SelectItem>
               </SelectContent>
             </Select>
@@ -222,7 +219,7 @@ export const AdminRequestsTable = () => {
                   <TableHead>Demandeur</TableHead>
                   <TableHead>Projet/Entreprise</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Montant</TableHead>
+                  <TableHead>Budget</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -342,7 +339,7 @@ export const AdminRequestsTable = () => {
                   <p className="font-medium">{selectedRequest.sector || '-'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Montant demandé</p>
+                  <p className="text-sm text-muted-foreground">Budget estimé</p>
                   <p className="font-medium">
                     {selectedRequest.funding_needed 
                       ? `${selectedRequest.funding_needed.toLocaleString()} FCFA`

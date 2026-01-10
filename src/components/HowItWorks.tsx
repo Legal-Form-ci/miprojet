@@ -1,54 +1,57 @@
-import { FileText, CheckCircle, TrendingUp, Handshake, Rocket } from "lucide-react";
+import { FileText, CheckCircle, TrendingUp, Handshake, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const steps = [
   {
     number: 1,
     icon: FileText,
-    title: "Soumission",
-    description: "Postez votre idée ou projet et payez les frais d'adhésion selon votre budget.",
+    titleKey: "howItWorks.step1.title",
+    descriptionKey: "howItWorks.step1.description",
     color: "text-primary",
   },
   {
     number: 2,
     icon: CheckCircle,
-    title: "Structuration",
-    description: "MIPROJET analyse, rédige le business plan ISO 21500 et évalue les risques.",
+    titleKey: "howItWorks.step2.title",
+    descriptionKey: "howItWorks.step2.description",
     color: "text-info",
   },
   {
     number: 3,
     icon: TrendingUp,
-    title: "Validation",
-    description: "Le comité technique valide et attribue un score de crédibilité (A, B, C).",
+    titleKey: "howItWorks.step3.title",
+    descriptionKey: "howItWorks.step3.description",
     color: "text-success",
   },
   {
     number: 4,
-    icon: Handshake,
-    title: "Publication",
-    description: "Votre projet labellisé devient visible par les investisseurs qualifiés.",
+    icon: Award,
+    titleKey: "howItWorks.step4.title",
+    descriptionKey: "howItWorks.step4.description",
     color: "text-warning",
   },
   {
     number: 5,
-    icon: Rocket,
-    title: "Financement",
-    description: "Collecte sécurisée via compte séquestre avec déblocage progressif.",
+    icon: Handshake,
+    titleKey: "howItWorks.step5.title",
+    descriptionKey: "howItWorks.step5.description",
     color: "text-secondary",
   },
 ];
 
 export const HowItWorks = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16 space-y-4">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground">
-            Comment ça marche ?
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground">
+            {t('howItWorks.title')}
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Un processus en 5 étapes pour transformer votre idée en projet financé
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            {t('howItWorks.subtitle')}
           </p>
         </div>
 
@@ -70,10 +73,10 @@ export const HowItWorks = () => {
                 
                 <div className="space-y-2">
                   <h3 className="text-xl font-semibold text-foreground">
-                    {step.title}
+                    {t(step.titleKey)}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
+                    {t(step.descriptionKey)}
                   </p>
                 </div>
 
@@ -88,16 +91,15 @@ export const HowItWorks = () => {
 
         <div className="mt-16 p-8 bg-primary/5 border border-primary/20 rounded-2xl">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-gradient-primary rounded-lg">
+            <div className="p-3 bg-gradient-primary rounded-lg flex-shrink-0">
               <CheckCircle className="h-6 w-6 text-primary-foreground" />
             </div>
             <div className="space-y-2">
               <h3 className="text-xl font-semibold text-foreground">
-                Label MIPROJET : Votre gage de qualité
+                {t('howItWorks.label.title')}
               </h3>
               <p className="text-muted-foreground">
-                Chaque projet structuré et validé reçoit un label MIPROJET, garantissant sa crédibilité 
-                auprès des investisseurs et partenaires. C'est votre passeport vers le financement.
+                {t('howItWorks.label.description')}
               </p>
             </div>
           </div>

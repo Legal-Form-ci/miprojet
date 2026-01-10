@@ -7,11 +7,6 @@ export const Features = () => {
 
   const features = [
     {
-      icon: Shield,
-      titleKey: 'features.security.title',
-      descriptionKey: 'features.security.description',
-    },
-    {
       icon: Award,
       titleKey: 'features.quality.title',
       descriptionKey: 'features.quality.description',
@@ -20,6 +15,11 @@ export const Features = () => {
       icon: TrendingUp,
       titleKey: 'features.structuring.title',
       descriptionKey: 'features.structuring.description',
+    },
+    {
+      icon: Shield,
+      titleKey: 'features.security.title',
+      descriptionKey: 'features.security.description',
     },
     {
       icon: Users,
@@ -59,8 +59,8 @@ export const Features = () => {
               key={index}
               className="group hover:shadow-glow transition-all duration-300 hover:-translate-y-2 border-2 hover:border-primary/30"
             >
-              <CardContent className="p-6 space-y-4">
-                <div className="p-4 bg-gradient-primary rounded-xl w-fit">
+              <CardContent className="p-6 space-y-4 text-center">
+                <div className="p-4 bg-gradient-primary rounded-xl w-fit mx-auto">
                   <feature.icon className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <h3 className="text-xl font-semibold text-foreground">

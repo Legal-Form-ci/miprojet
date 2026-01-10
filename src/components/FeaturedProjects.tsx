@@ -4,8 +4,11 @@ import { ArrowRight, AlertCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import projectPoultryFarm from "@/assets/project-poultry-farm.jpg";
+import projectDigitalTraining from "@/assets/project-digital-training.jpg";
+import projectOrganicFarming from "@/assets/project-organic-farming.jpg";
 
-// Realistic West African projects with authentic images
+// Projets réalistes d'Afrique de l'Ouest avec images AI authentiques
 const projects = [
   {
     title: "Ferme Avicole Moderne de Tiassalé",
@@ -15,7 +18,7 @@ const projects = [
     fundingType: "Investissement en capital",
     status: "validated" as const,
     score: "A" as const,
-    image: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600&h=400&fit=crop",
+    image: projectPoultryFarm,
   },
   {
     title: "Centre Numérique de Formation Lomé",
@@ -25,7 +28,7 @@ const projects = [
     fundingType: "Subvention & Partenariat",
     status: "in_structuring" as const,
     score: "B" as const,
-    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop",
+    image: projectDigitalTraining,
   },
   {
     title: "Coopérative Agricole Bio du Sine-Saloum",
@@ -35,7 +38,7 @@ const projects = [
     fundingType: "Financement Mixte",
     status: "oriented" as const,
     score: "A" as const,
-    image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&h=400&fit=crop",
+    image: projectOrganicFarming,
   },
 ];
 
@@ -45,21 +48,13 @@ export const FeaturedProjects = () => {
   return (
     <section className="py-16 sm:py-24 bg-background">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 sm:mb-12 gap-4">
-          <div className="space-y-2">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
-              {t('projects.featuredTitle')}
-            </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
-              {t('projects.featuredSubtitle')}
-            </p>
-          </div>
-          <Link to="/projects" className="hidden md:flex">
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
-              {t('projects.viewAll')}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </Link>
+        <div className="text-center mb-8 sm:mb-12 space-y-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground">
+            {t('projects.featuredTitle')}
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+            {t('projects.featuredSubtitle')}
+          </p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
@@ -77,9 +72,9 @@ export const FeaturedProjects = () => {
           </AlertDescription>
         </Alert>
 
-        <div className="mt-8 sm:mt-12 text-center md:hidden">
+        <div className="mt-8 sm:mt-12 text-center">
           <Link to="/projects">
-            <Button variant="outline" className="w-full sm:w-auto border-primary text-primary hover:bg-primary hover:text-primary-foreground">
+            <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-primary-foreground">
               {t('projects.viewAll')}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
