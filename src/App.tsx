@@ -30,7 +30,6 @@ import ProjectDetail from "./pages/ProjectDetail";
 
 // Lazy load service and payment pages
 const StructuringService = lazy(() => import("./pages/services/StructuringService"));
-const FundingService = lazy(() => import("./pages/services/FundingService"));
 const EnterpriseService = lazy(() => import("./pages/services/EnterpriseService"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 
@@ -83,11 +82,6 @@ const App = () => (
             <Route path="/services/structuration" element={
               <Suspense fallback={<PageLoader />}>
                 <StructuringService />
-              </Suspense>
-            } />
-            <Route path="/services/financement" element={
-              <Suspense fallback={<PageLoader />}>
-                <FundingService />
               </Suspense>
             } />
             <Route path="/services/accompagnement" element={

@@ -71,7 +71,7 @@ const team = [
   {
     name: "Aminata DIALLO",
     role: "Directrice des Opérations",
-    description: "Spécialiste en gestion de projets et mobilisation de financements"
+    description: "Spécialiste en gestion de projets et accompagnement stratégique"
   },
   {
     name: "Kofi MENSAH",
@@ -164,7 +164,7 @@ const About = () => {
                     {[
                       "Structuration selon normes ISO 21500",
                       "Accompagnement personnalisé end-to-end",
-                      "Mise en relation avec investisseurs qualifiés",
+                      "Orientation vers partenaires adaptés",
                       "Suivi et évaluation des projets"
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
