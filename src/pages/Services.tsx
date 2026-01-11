@@ -34,16 +34,16 @@ const services = [
   },
   {
     icon: Users,
-    title: "Mise en Relation",
-    description: "Connexion avec l'écosystème financier",
+    title: "Orientation Stratégique",
+    description: "Orientation vers l'écosystème adapté",
     features: [
-      "Accès aux investisseurs qualifiés",
-      "Mise en relation avec partenaires techniques",
-      "Connexion aux bailleurs de fonds",
-      "Networking événementiel",
-      "Base de données investisseurs",
+      "Orientation vers investisseurs qualifiés",
+      "Orientation vers partenaires techniques",
+      "Orientation vers bailleurs de fonds",
+      "Accompagnement événementiel",
+      "Base de données partenaires",
     ],
-    price: "Commission sur succès",
+    price: "Inclus dans le service",
     popular: false,
   },
   {
@@ -121,8 +121,8 @@ const services = [
 const Services = () => {
   useEffect(() => {
     setMeta(
-      "Nos Services | MIPROJET - Structuration et Financement de Projets",
-      "Découvrez tous les services MIPROJET: analyse de projet, mise en relation, marketing digital, consultance, création d'entreprise, formation."
+      "Nos Services | MIPROJET - Structuration et Orientation de Projets",
+      "Découvrez tous les services MIPROJET: analyse de projet, orientation stratégique, marketing digital, consultance, création d'entreprise, formation."
     );
   }, []);
 

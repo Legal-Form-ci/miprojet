@@ -34,8 +34,8 @@ const benefits = [
   },
   {
     icon: Users,
-    title: "Mise en Relation",
-    description: "MIPROJET facilite la mise en relation entre investisseurs et porteurs de projets structurés.",
+    title: "Orientation Stratégique",
+    description: "MIPROJET oriente les projets structurés vers les investisseurs et partenaires adaptés.",
     color: "bg-warning/10 text-warning"
   },
 ];

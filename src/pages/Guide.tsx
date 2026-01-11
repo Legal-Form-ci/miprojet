@@ -80,7 +80,7 @@ const Guide = () => {
             <CardContent className="pt-6">
               <h3 className="text-lg font-semibold mb-2">Important à savoir</h3>
               <p className="text-muted-foreground">
-                MIPROJET n'est pas un organisme de financement. Nous accompagnons les porteurs de projets dans la structuration professionnelle de leurs idées et facilitons leur mise en relation avec des investisseurs et partenaires financiers adaptés à leur profil.
+                MIPROJET n'est pas un organisme de financement. Nous accompagnons les porteurs de projets dans la structuration professionnelle de leurs idées et les orientons vers des partenaires adaptés à leur profil.
               </p>
             </CardContent>
           </Card>

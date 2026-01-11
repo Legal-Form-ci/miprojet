@@ -31,8 +31,8 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Hero
     'hero.titleLine1': 'Plateforme panafricaine de structuration',
-    'hero.titleLine2': 'de projets et de facilitation du financement',
-    'hero.description': 'MIPROJET accompagne les porteurs de projets dans la structuration et la préparation de dossiers bancables et facilite leur mise en relation avec des investisseurs et partenaires financiers.',
+    'hero.titleLine2': 'et d\'orientation de projets',
+    'hero.description': 'MIPROJET accompagne les porteurs de projets dans la structuration et la préparation de dossiers bancables, puis les oriente vers des partenaires adaptés.',
     'hero.submitProject': 'Soumettre mon projet',
     'hero.discoverProjects': 'Découvrir les projets',
     'hero.projectsStructured': 'Projets structurés',
@@ -110,7 +110,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'funding.partnership.feature2': 'Partage de compétences',
     'funding.partnership.feature3': 'Gouvernance structurée',
     'funding.notice.title': 'Information importante',
-    'funding.notice.description': 'MIPROJET n\'est pas un organisme de financement. Nous accompagnons les porteurs de projets dans la structuration et la préparation de dossiers bancables et facilitons leur mise en relation avec des investisseurs et partenaires financiers.',
+    'funding.notice.description': 'MIPROJET n\'est pas un organisme de financement. Nous accompagnons les porteurs de projets dans la structuration et la préparation de dossiers bancables et les orientons vers des partenaires adaptés.',
     
     // Services
     'services.badge': 'Nos Services',
@@ -121,8 +121,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'services.analysis.description': 'Structuration professionnelle des projets selon la norme ISO 21500, incluant l\'analyse de faisabilité, l\'identification des risques et l\'élaboration de business plans.',
     'services.consulting.title': 'Consultance Stratégique',
     'services.consulting.description': 'Consultance stratégique pour l\'orientation, la prise de décision et l\'optimisation des projets à fort potentiel.',
-    'services.networking.title': 'Mise en Relation Stratégique',
-    'services.networking.description': 'Mise en relation avec des investisseurs, partenaires techniques ou bailleurs, après structuration et validation du projet.',
+    'services.networking.title': 'Orientation Stratégique',
+    'services.networking.description': 'Orientation vers des investisseurs, partenaires techniques ou bailleurs adaptés, après structuration et validation du projet.',
     'services.monitoring.title': 'Contrôle & Suivi de Projet',
     'services.monitoring.description': 'Suivi, contrôle et reporting de l\'avancement des projets, incluant le suivi des risques et des mesures d\'atténuation.',
     'services.training.title': 'Formation',
@@ -144,7 +144,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'features.tracking.title': 'Suivi Transparent',
     'features.tracking.description': 'Rapports d\'avancement réguliers et tableau de bord en temps réel avec indicateurs clés.',
     'features.support.title': 'Accompagnement',
-    'features.support.description': 'Support complet du dépôt du projet à la mise en relation avec les partenaires.',
+    'features.support.description': 'Support complet du dépôt du projet à l\'orientation vers les partenaires adaptés.',
     
     // How It Works
     'howItWorks.title': 'Comment ça marche ?',
@@ -158,7 +158,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'howItWorks.step4.title': 'Labellisation',
     'howItWorks.step4.description': 'Votre projet reçoit le label MIPROJET, gage de qualité et de crédibilité.',
     'howItWorks.step5.title': 'Orientation',
-    'howItWorks.step5.description': 'Mise en relation avec les partenaires et investisseurs adaptés à votre projet.',
+    'howItWorks.step5.description': 'Orientation vers les partenaires et investisseurs adaptés à votre projet.',
     'howItWorks.label.title': 'Label MIPROJET : Votre gage de qualité',
     'howItWorks.label.description': 'Chaque projet structuré et validé reçoit un label MIPROJET, garantissant sa crédibilité auprès des investisseurs et partenaires. C\'est votre passeport vers le financement.',
     
@@ -394,8 +394,8 @@ export const translations: Record<Language, Record<string, string>> = {
     
     // Hero
     'hero.titleLine1': 'Pan-African platform for project structuring',
-    'hero.titleLine2': 'and funding facilitation',
-    'hero.description': 'MIPROJET supports project owners in structuring and preparing bankable files and facilitates their connection with investors and financial partners.',
+    'hero.titleLine2': 'and project orientation',
+    'hero.description': 'MIPROJET supports project owners in structuring and preparing bankable files and guides them to suitable partners.',
     'hero.submitProject': 'Submit my project',
     'hero.discoverProjects': 'Discover projects',
     'hero.projectsStructured': 'Structured projects',
@@ -473,7 +473,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'funding.partnership.feature2': 'Skills sharing',
     'funding.partnership.feature3': 'Structured governance',
     'funding.notice.title': 'Important information',
-    'funding.notice.description': 'MIPROJET is not a funding organization. We support project owners in structuring and preparing bankable files and facilitate their connection with investors and financial partners.',
+    'funding.notice.description': 'MIPROJET is not a funding organization. We support project owners in structuring and preparing bankable files and guide them to suitable partners.',
     
     // Services
     'services.badge': 'Our Services',
@@ -484,8 +484,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'services.analysis.description': 'Professional project structuring according to ISO 21500, including feasibility analysis, risk identification and business plan development.',
     'services.consulting.title': 'Strategic Consulting',
     'services.consulting.description': 'Strategic consulting for guidance, decision-making and optimization of high-potential projects.',
-    'services.networking.title': 'Strategic Networking',
-    'services.networking.description': 'Connection with investors, technical partners or funders, after structuring and project validation.',
+    'services.networking.title': 'Strategic Orientation',
+    'services.networking.description': 'Guidance towards investors, technical partners or funders after structuring and project validation.',
     'services.monitoring.title': 'Project Control & Monitoring',
     'services.monitoring.description': 'Monitoring, control and reporting of project progress, including risk tracking and mitigation measures.',
     'services.training.title': 'Training',
@@ -496,8 +496,8 @@ export const translations: Record<Language, Record<string, string>> = {
     // Features
     'features.title': 'Why Choose MIPROJET?',
     'features.subtitle': 'A complete platform that supports your success from A to Z',
-    'features.security.title': 'Maximum Security',
-    'features.security.description': 'Securing funds and documents through escrow account, progressive release and legal protection.',
+    'features.security.title': 'Guaranteed Confidentiality',
+    'features.security.description': 'Protection of your data and sensitive documents with the highest confidentiality standards.',
     'features.quality.title': 'Quality Label',
     'features.quality.description': 'ISO 21500 professional validation and transparent credibility score for investors and partners.',
     'features.structuring.title': 'Pro Structuring',
@@ -507,7 +507,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'features.tracking.title': 'Transparent Tracking',
     'features.tracking.description': 'Regular progress reports and real-time dashboard with key indicators.',
     'features.support.title': 'Support',
-    'features.support.description': 'Complete support from project submission to connection with partners.',
+    'features.support.description': 'Complete support from project submission to orientation towards suitable partners.',
     
     // Projects
     'projects.title': 'Structured Projects',
@@ -718,6 +718,22 @@ export const translations: Record<Language, Record<string, string>> = {
     'notifications.empty': 'No notifications',
     'notifications.markAllRead': 'Mark all as read',
     'notifications.new': 'New notification',
+    
+    // How It Works
+    'howItWorks.title': 'How does it work?',
+    'howItWorks.subtitle': 'A 5-step process to transform your idea into a structured project',
+    'howItWorks.step1.title': 'Submission',
+    'howItWorks.step1.description': 'Post your idea or project and pay the membership fees according to your budget.',
+    'howItWorks.step2.title': 'Structuring',
+    'howItWorks.step2.description': 'MIPROJET analyzes, writes the ISO 21500 business plan and assesses risks.',
+    'howItWorks.step3.title': 'Validation',
+    'howItWorks.step3.description': 'The technical committee validates and assigns a credibility score (A, B, C).',
+    'howItWorks.step4.title': 'Labeling',
+    'howItWorks.step4.description': 'Your project receives the MIPROJET label, a guarantee of quality and credibility.',
+    'howItWorks.step5.title': 'Orientation',
+    'howItWorks.step5.description': 'Guidance towards partners and investors suited to your project.',
+    'howItWorks.label.title': 'MIPROJET Label: Your quality guarantee',
+    'howItWorks.label.description': 'Each structured and validated project receives a MIPROJET label, guaranteeing its credibility with investors and partners. It is your passport to funding.',
   },
   
   ar: {
@@ -825,8 +841,8 @@ export const translations: Record<Language, Record<string, string>> = {
     'services.analysis.description': 'هيكلة احترافية للمشاريع وفق معيار ISO 21500، بما في ذلك تحليل الجدوى وتحديد المخاطر وإعداد خطة العمل.',
     'services.consulting.title': 'الاستشارات الاستراتيجية',
     'services.consulting.description': 'استشارات استراتيجية للتوجيه واتخاذ القرارات وتحسين المشاريع ذات الإمكانات العالية.',
-    'services.networking.title': 'التواصل الاستراتيجي',
-    'services.networking.description': 'الربط مع المستثمرين والشركاء التقنيين أو الممولين، بعد الهيكلة والتحقق من المشروع.',
+    'services.networking.title': 'التوجيه الاستراتيجي',
+    'services.networking.description': 'التوجيه نحو المستثمرين والشركاء التقنيين أو الممولين المناسبين، بعد الهيكلة والتحقق من المشروع.',
     'services.monitoring.title': 'مراقبة ومتابعة المشروع',
     'services.monitoring.description': 'المتابعة والتحكم وإعداد التقارير عن تقدم المشروع، بما في ذلك تتبع المخاطر وإجراءات التخفيف.',
     'services.training.title': 'التدريب',
@@ -837,8 +853,8 @@ export const translations: Record<Language, Record<string, string>> = {
     // Features
     'features.title': 'لماذا تختار MIPROJET؟',
     'features.subtitle': 'منصة شاملة تدعم نجاحك من الألف إلى الياء',
-    'features.security.title': 'أقصى درجات الأمان',
-    'features.security.description': 'تأمين الأموال والمستندات من خلال حساب ضمان وإصدار تدريجي وحماية قانونية.',
+    'features.security.title': 'ضمان السرية',
+    'features.security.description': 'حماية بياناتك ومستنداتك الحساسة بأعلى معايير السرية.',
     'features.quality.title': 'علامة الجودة',
     'features.quality.description': 'التحقق المهني وفق ISO 21500 ودرجة مصداقية شفافة للمستثمرين والشركاء.',
     'features.structuring.title': 'هيكلة احترافية',
@@ -848,7 +864,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'features.tracking.title': 'تتبع شفاف',
     'features.tracking.description': 'تقارير تقدم منتظمة ولوحة تحكم في الوقت الفعلي مع المؤشرات الرئيسية.',
     'features.support.title': 'الدعم',
-    'features.support.description': 'دعم كامل من تقديم المشروع إلى الربط مع الشركاء.',
+    'features.support.description': 'دعم كامل من تقديم المشروع إلى التوجيه نحو الشركاء المناسبين.',
     
     // Projects
     'projects.title': 'المشاريع المهيكلة',
@@ -982,6 +998,22 @@ export const translations: Record<Language, Record<string, string>> = {
     'notifications.empty': 'لا توجد إشعارات',
     'notifications.markAllRead': 'تحديد الكل كمقروء',
     'notifications.new': 'إشعار جديد',
+    
+    // How It Works
+    'howItWorks.title': 'كيف يعمل؟',
+    'howItWorks.subtitle': 'عملية من 5 خطوات لتحويل فكرتك إلى مشروع مهيكل',
+    'howItWorks.step1.title': 'التقديم',
+    'howItWorks.step1.description': 'انشر فكرتك أو مشروعك وادفع رسوم العضوية حسب ميزانيتك.',
+    'howItWorks.step2.title': 'الهيكلة',
+    'howItWorks.step2.description': 'MIPROJET يحلل ويكتب خطة العمل ISO 21500 ويقيم المخاطر.',
+    'howItWorks.step3.title': 'التحقق',
+    'howItWorks.step3.description': 'اللجنة الفنية تصادق وتمنح درجة المصداقية (A, B, C).',
+    'howItWorks.step4.title': 'التصنيف',
+    'howItWorks.step4.description': 'يحصل مشروعك على علامة MIPROJET، ضمان للجودة والمصداقية.',
+    'howItWorks.step5.title': 'التوجيه',
+    'howItWorks.step5.description': 'التوجيه نحو الشركاء والمستثمرين المناسبين لمشروعك.',
+    'howItWorks.label.title': 'علامة MIPROJET: ضمان الجودة',
+    'howItWorks.label.description': 'كل مشروع مهيكل ومصادق عليه يحصل على علامة MIPROJET، مما يضمن مصداقيته لدى المستثمرين والشركاء. إنها جواز سفرك للتمويل.',
   },
   
   zh: {
@@ -1246,6 +1278,22 @@ export const translations: Record<Language, Record<string, string>> = {
     'notifications.empty': '没有通知',
     'notifications.markAllRead': '全部标记为已读',
     'notifications.new': '新通知',
+    
+    // How It Works
+    'howItWorks.title': '如何运作？',
+    'howItWorks.subtitle': '将您的想法转化为结构化项目的5步流程',
+    'howItWorks.step1.title': '提交',
+    'howItWorks.step1.description': '发布您的想法或项目并根据预算支付会员费。',
+    'howItWorks.step2.title': '结构化',
+    'howItWorks.step2.description': 'MIPROJET分析、编写ISO 21500商业计划并评估风险。',
+    'howItWorks.step3.title': '验证',
+    'howItWorks.step3.description': '技术委员会验证并分配可信度评分（A、B、C）。',
+    'howItWorks.step4.title': '认证',
+    'howItWorks.step4.description': '您的项目获得MIPROJET标签，这是质量和可信度的保证。',
+    'howItWorks.step5.title': '导向',
+    'howItWorks.step5.description': '引导您找到适合您项目的合作伙伴和投资者。',
+    'howItWorks.label.title': 'MIPROJET标签：您的质量保证',
+    'howItWorks.label.description': '每个结构化和验证的项目都会获得MIPROJET标签，保证其在投资者和合作伙伴面前的可信度。这是您获得融资的通行证。',
   },
   
   es: {
@@ -1510,6 +1558,22 @@ export const translations: Record<Language, Record<string, string>> = {
     'notifications.empty': 'Sin notificaciones',
     'notifications.markAllRead': 'Marcar todo como leído',
     'notifications.new': 'Nueva notificación',
+    
+    // How It Works
+    'howItWorks.title': '¿Cómo funciona?',
+    'howItWorks.subtitle': 'Un proceso de 5 pasos para transformar tu idea en un proyecto estructurado',
+    'howItWorks.step1.title': 'Envío',
+    'howItWorks.step1.description': 'Publica tu idea o proyecto y paga las cuotas de membresía según tu presupuesto.',
+    'howItWorks.step2.title': 'Estructuración',
+    'howItWorks.step2.description': 'MIPROJET analiza, redacta el plan de negocios ISO 21500 y evalúa los riesgos.',
+    'howItWorks.step3.title': 'Validación',
+    'howItWorks.step3.description': 'El comité técnico valida y asigna una puntuación de credibilidad (A, B, C).',
+    'howItWorks.step4.title': 'Etiquetado',
+    'howItWorks.step4.description': 'Tu proyecto recibe el sello MIPROJET, garantía de calidad y credibilidad.',
+    'howItWorks.step5.title': 'Orientación',
+    'howItWorks.step5.description': 'Orientación hacia socios e inversores adecuados para tu proyecto.',
+    'howItWorks.label.title': 'Sello MIPROJET: Tu garantía de calidad',
+    'howItWorks.label.description': 'Cada proyecto estructurado y validado recibe un sello MIPROJET, garantizando su credibilidad ante inversores y socios. Es tu pasaporte hacia el financiamiento.',
   },
   
   de: {
@@ -1774,5 +1838,21 @@ export const translations: Record<Language, Record<string, string>> = {
     'notifications.empty': 'Keine Benachrichtigungen',
     'notifications.markAllRead': 'Alle als gelesen markieren',
     'notifications.new': 'Neue Benachrichtigung',
+    
+    // How It Works
+    'howItWorks.title': 'Wie funktioniert es?',
+    'howItWorks.subtitle': 'Ein 5-Schritte-Prozess, um Ihre Idee in ein strukturiertes Projekt zu verwandeln',
+    'howItWorks.step1.title': 'Einreichung',
+    'howItWorks.step1.description': 'Veröffentlichen Sie Ihre Idee oder Ihr Projekt und zahlen Sie die Mitgliedsgebühren entsprechend Ihrem Budget.',
+    'howItWorks.step2.title': 'Strukturierung',
+    'howItWorks.step2.description': 'MIPROJET analysiert, erstellt den ISO 21500 Geschäftsplan und bewertet Risiken.',
+    'howItWorks.step3.title': 'Validierung',
+    'howItWorks.step3.description': 'Das technische Komitee validiert und vergibt einen Glaubwürdigkeitsscore (A, B, C).',
+    'howItWorks.step4.title': 'Kennzeichnung',
+    'howItWorks.step4.description': 'Ihr Projekt erhält das MIPROJET-Siegel, eine Garantie für Qualität und Glaubwürdigkeit.',
+    'howItWorks.step5.title': 'Orientierung',
+    'howItWorks.step5.description': 'Orientierung zu Partnern und Investoren, die zu Ihrem Projekt passen.',
+    'howItWorks.label.title': 'MIPROJET-Siegel: Ihre Qualitätsgarantie',
+    'howItWorks.label.description': 'Jedes strukturierte und validierte Projekt erhält ein MIPROJET-Siegel, das seine Glaubwürdigkeit bei Investoren und Partnern garantiert. Es ist Ihr Pass zur Finanzierung.',
   },
 };
