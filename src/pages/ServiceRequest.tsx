@@ -26,22 +26,16 @@ const serviceTypes = [
     description: { fr: 'Business plan, étude de faisabilité, analyse des risques selon ISO 21500', en: 'Business plan, feasibility study, risk analysis according to ISO 21500', ar: 'خطة العمل، دراسة الجدوى، تحليل المخاطر وفقاً لـ ISO 21500', zh: '商业计划、可行性研究、ISO 21500风险分析', es: 'Plan de negocios, estudio de viabilidad, análisis de riesgos según ISO 21500', de: 'Geschäftsplan, Machbarkeitsstudie, Risikoanalyse nach ISO 21500' },
   },
   {
-    id: 'fundingOnly',
-    icon: Briefcase,
-    title: { fr: 'Financement Uniquement', en: 'Funding Only', ar: 'التمويل فقط', zh: '仅融资', es: 'Solo Financiamiento', de: 'Nur Finanzierung' },
-    description: { fr: 'Pour projets déjà structurés cherchant des investisseurs', en: 'For already structured projects seeking investors', ar: 'للمشاريع المهيكلة بالفعل التي تبحث عن مستثمرين', zh: '适用于已结构化的项目寻找投资者', es: 'Para proyectos ya estructurados buscando inversores', de: 'Für bereits strukturierte Projekte auf Investorensuche' },
-  },
-  {
     id: 'fullService',
     icon: Rocket,
     title: { fr: 'Accompagnement Complet', en: 'Full Service', ar: 'الخدمة الكاملة', zh: '全套服务', es: 'Servicio Completo', de: 'Vollservice' },
-    description: { fr: 'Structuration + Recherche de financement + Accompagnement', en: 'Structuring + Fundraising + Support', ar: 'الهيكلة + جمع التمويل + الدعم', zh: '结构化 + 融资 + 支持', es: 'Estructuración + Búsqueda de financiamiento + Acompañamiento', de: 'Strukturierung + Finanzierung + Begleitung' },
+    description: { fr: 'Structuration + Labellisation + Orientation vers partenaires', en: 'Structuring + Labeling + Partner orientation', ar: 'الهيكلة + التصنيف + التوجيه نحو الشركاء', zh: '结构化 + 标签 + 合作伙伴导向', es: 'Estructuración + Etiquetado + Orientación hacia socios', de: 'Strukturierung + Kennzeichnung + Partnerorientierung' },
   },
   {
     id: 'enterprise',
     icon: Building2,
     title: { fr: 'Entreprise Existante', en: 'Existing Enterprise', ar: 'مؤسسة قائمة', zh: '现有企业', es: 'Empresa Existente', de: 'Bestehendes Unternehmen' },
-    description: { fr: 'Pour entreprises avec CA et bilan cherchant financement ou expansion', en: 'For enterprises with revenue and balance sheet seeking funding or expansion', ar: 'للمؤسسات ذات الإيرادات والميزانية التي تبحث عن تمويل أو توسع', zh: '适用于有收入和资产负债表寻求融资或扩张的企业', es: 'Para empresas con ingresos y balance buscando financiamiento o expansión', de: 'Für Unternehmen mit Umsatz und Bilanz auf Finanzierungs- oder Expansionssuche' },
+    description: { fr: 'Pour entreprises avec CA et bilan cherchant accompagnement ou expansion', en: 'For enterprises with revenue seeking support or expansion', ar: 'للمؤسسات ذات الإيرادات التي تبحث عن دعم أو توسع', zh: '适用于有收入寻求支持或扩张的企业', es: 'Para empresas con ingresos buscando acompañamiento o expansión', de: 'Für Unternehmen mit Umsatz auf Begleitungs- oder Expansionssuche' },
   },
   {
     id: 'training',
