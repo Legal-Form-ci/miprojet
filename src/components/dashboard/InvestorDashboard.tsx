@@ -3,56 +3,33 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  DollarSign, TrendingUp, FolderKanban, Eye, Search,
-  PieChart, BarChart3, ArrowUpRight, ArrowDownRight
+  FolderKanban, Search, Eye, Award, 
+  FileText, BarChart3, Star, TrendingUp
 } from "lucide-react";
 
-interface Contribution {
+interface ProjectInterest {
   id: string;
-  amount: number;
-  type: string;
-  created_at: string;
   project_id: string;
+  created_at: string;
 }
 
 export const InvestorDashboard = () => {
   const { user } = useAuth();
-  const [contributions, setContributions] = useState<Contribution[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalInvested: 0,
-    activeInvestments: 0,
-    averageROI: 12.5,
-    portfolioGrowth: 8.3
+    projectsExplored: 12,
+    projectsFollowed: 5,
+    requestsSent: 3,
+    accessGranted: 2
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user) return;
-
-      const { data: contributionsData } = await supabase
-        .from('contributions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      const contributions = contributionsData || [];
-      setContributions(contributions);
-      setStats({
-        totalInvested: contributions.reduce((sum, c) => sum + (c.amount || 0), 0),
-        activeInvestments: contributions.length,
-        averageROI: 12.5,
-        portfolioGrowth: 8.3
-      });
-      setLoading(false);
-    };
-
-    loadData();
+    // Simulate loading
+    setTimeout(() => setLoading(false), 500);
   }, [user]);
 
   if (loading) {
@@ -78,14 +55,11 @@ export const InvestorDashboard = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Investi</p>
-                <p className="text-xl sm:text-2xl font-bold">
-                  {(stats.totalInvested / 1000000).toFixed(1)}M
-                </p>
-                <p className="text-xs text-muted-foreground">FCFA</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Projets explorés</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.projectsExplored}</p>
               </div>
               <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
-                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                <Search className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               </div>
             </div>
           </CardContent>
@@ -95,45 +69,39 @@ export const InvestorDashboard = () => {
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Projets Financés</p>
-                <p className="text-xl sm:text-2xl font-bold">{stats.activeInvestments}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Projets suivis</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.projectsFollowed}</p>
+              </div>
+              <div className="p-2 sm:p-3 rounded-lg bg-warning/10 flex-shrink-0">
+                <Star className="h-5 w-5 sm:h-6 sm:w-6 text-warning" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Demandes d'accès</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.requestsSent}</p>
+              </div>
+              <div className="p-2 sm:p-3 rounded-lg bg-info/10 flex-shrink-0">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-info" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between">
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Accès accordés</p>
+                <p className="text-xl sm:text-2xl font-bold text-success">{stats.accessGranted}</p>
               </div>
               <div className="p-2 sm:p-3 rounded-lg bg-success/10 flex-shrink-0">
-                <FolderKanban className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">ROI Moyen</p>
-                <p className="text-xl sm:text-2xl font-bold text-success flex items-center gap-1">
-                  <ArrowUpRight className="h-4 w-4" />
-                  {stats.averageROI}%
-                </p>
-              </div>
-              <div className="p-2 sm:p-3 rounded-lg bg-success/10 flex-shrink-0">
-                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-lg transition-shadow">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center justify-between">
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Croissance</p>
-                <p className="text-xl sm:text-2xl font-bold text-success flex items-center gap-1">
-                  <ArrowUpRight className="h-4 w-4" />
-                  {stats.portfolioGrowth}%
-                </p>
-              </div>
-              <div className="p-2 sm:p-3 rounded-lg bg-primary/10 flex-shrink-0">
-                <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+                <Award className="h-5 w-5 sm:h-6 sm:w-6 text-success" />
               </div>
             </div>
           </CardContent>
@@ -151,88 +119,84 @@ export const InvestorDashboard = () => {
         </Link>
         <Link to="/investors">
           <Button variant="outline" size="sm" className="gap-2">
-            <PieChart className="h-4 w-4" />
-            <span className="hidden sm:inline">Mon portefeuille</span>
+            <BarChart3 className="h-4 w-4" />
+            <span className="hidden sm:inline">Espace Partenaires</span>
           </Button>
         </Link>
       </div>
 
+      {/* Info Box */}
+      <Card className="bg-primary/5 border-primary/20">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Award className="h-5 w-5 text-primary mt-0.5" />
+            <div>
+              <p className="font-medium text-sm">Comment ça fonctionne ?</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                MIPROJET structure et labellise les projets selon la norme ISO 21500. En tant qu'investisseur, 
+                vous pouvez explorer les projets validés et demander l'accès aux dossiers complets. 
+                MIPROJET vous oriente vers les projets correspondant à vos critères.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Tabs */}
-      <Tabs defaultValue="portfolio" className="space-y-4">
+      <Tabs defaultValue="opportunities" className="space-y-4">
         <TabsList className="w-full sm:w-auto grid grid-cols-3 sm:inline-flex">
-          <TabsTrigger value="portfolio" className="text-xs sm:text-sm">Portefeuille</TabsTrigger>
           <TabsTrigger value="opportunities" className="text-xs sm:text-sm">Opportunités</TabsTrigger>
-          <TabsTrigger value="history" className="text-xs sm:text-sm">Historique</TabsTrigger>
+          <TabsTrigger value="followed" className="text-xs sm:text-sm">Suivis</TabsTrigger>
+          <TabsTrigger value="access" className="text-xs sm:text-sm">Accès</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="portfolio" className="space-y-4">
-          {contributions.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardContent>
-                <PieChart className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Portefeuille vide</h3>
-                <p className="text-muted-foreground mb-4">Commencez à investir dans des projets à fort impact</p>
+        <TabsContent value="opportunities" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Projets validés disponibles</CardTitle>
+              <CardDescription>Projets structurés et labellisés par MIPROJET</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <FolderKanban className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="mb-4">Explorez les projets validés par MIPROJET</p>
                 <Link to="/projects">
-                  <Button><Search className="mr-2 h-4 w-4" />Explorer les projets</Button>
+                  <Button>
+                    <Search className="mr-2 h-4 w-4" />
+                    Voir les projets
+                  </Button>
                 </Link>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {contributions.map((contribution) => (
-                <Card key={contribution.id} className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-base sm:text-lg">Investissement #{contribution.id.slice(0, 8)}</CardTitle>
-                      <Badge variant="default">Actif</Badge>
-                    </div>
-                    <CardDescription className="text-xs sm:text-sm">
-                      {new Date(contribution.created_at).toLocaleDateString('fr-FR')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Montant</span>
-                        <span className="font-bold">{contribution.amount.toLocaleString()} FCFA</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Type</span>
-                        <span className="capitalize">{contribution.type}</span>
-                      </div>
-                      <Button variant="outline" size="sm" className="w-full">
-                        <Eye className="mr-2 h-4 w-4" />
-                        Voir le projet
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="opportunities">
+        <TabsContent value="followed">
           <Card className="text-center py-12">
             <CardContent>
-              <TrendingUp className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Opportunités d'investissement</h3>
+              <Star className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Aucun projet suivi</h3>
               <p className="text-muted-foreground mb-4">
-                Découvrez les projets à fort potentiel sélectionnés par nos experts
+                Ajoutez des projets à vos favoris pour les retrouver facilement
               </p>
               <Link to="/projects">
-                <Button>Voir les opportunités</Button>
+                <Button variant="outline">Explorer les projets</Button>
               </Link>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="history">
-          <Card className="text-center py-12">
+        <TabsContent value="access">
+          <Card>
+            <CardHeader>
+              <CardTitle>Demandes d'accès</CardTitle>
+              <CardDescription>Historique de vos demandes d'accès aux dossiers projets</CardDescription>
+            </CardHeader>
             <CardContent>
-              <BarChart3 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Historique des transactions</h3>
-              <p className="text-muted-foreground">Votre historique d'investissements apparaîtra ici</p>
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Aucune demande d'accès en cours</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -23,6 +23,7 @@ import { AdminNewsManager } from "@/components/admin/AdminNewsManager";
 import { AdminFAQManager } from "@/components/admin/AdminFAQManager";
 import { AdminPaymentsTable } from "@/components/admin/AdminPaymentsTable";
 import { AdminInvoicesTable } from "@/components/admin/AdminInvoicesTable";
+import { AdminGuide } from "@/components/admin/AdminGuide";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, adminChecked, signOut } = useAuth();
@@ -147,7 +148,7 @@ const AdminDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold">Demandes de Services</h1>
-                  <p className="text-muted-foreground">Gérez les demandes de structuration, financement et accompagnement</p>
+                  <p className="text-muted-foreground">Gérez les demandes de structuration et d'accompagnement</p>
                 </div>
               </div>
               
@@ -166,56 +167,8 @@ const AdminDashboard = () => {
               <AdminPaymentsTable />
             </TabsContent>
             
-            <TabsContent value="finance" className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold">Finance & Transactions</h1>
-                <p className="text-muted-foreground">Suivi des transactions et revenus</p>
-              </div>
-              
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Revenus du mois</CardDescription>
-                    <CardTitle className="text-3xl text-success">2,450,000 FCFA</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-1 text-sm text-success">
-                      <TrendingUp className="h-4 w-4" />
-                      +18.2% vs mois dernier
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Fonds en attente</CardDescription>
-                    <CardTitle className="text-3xl text-warning">890,000 FCFA</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">12 transactions en attente</p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Commission totale</CardDescription>
-                    <CardTitle className="text-3xl">185,000 FCFA</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">5% des fonds collectés</p>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardDescription>Remboursements</CardDescription>
-                    <CardTitle className="text-3xl text-destructive">45,000 FCFA</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">3 remboursements ce mois</p>
-                  </CardContent>
-                </Card>
-              </div>
+            <TabsContent value="admin-guide" className="space-y-6">
+              <AdminGuide />
             </TabsContent>
             
             <TabsContent value="faq" className="space-y-6">
