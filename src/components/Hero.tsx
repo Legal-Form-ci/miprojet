@@ -26,7 +26,7 @@ export const Hero = () => {
                 Plateforme Panafricaine
               </h1>
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold text-accent leading-snug">
-                de Structuration et de Financement de Projets
+                de Structuration et d'Orientation de Projets
               </h2>
             </div>
             
