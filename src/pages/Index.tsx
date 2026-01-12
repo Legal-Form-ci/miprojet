@@ -11,10 +11,12 @@ import { TestimonialsSection } from "@/components/TestimonialsSection";
 import { Features } from "@/components/Features";
 import { CallToAction } from "@/components/CallToAction";
 import { Footer } from "@/components/Footer";
+import { WelcomePopup } from "@/components/WelcomePopup";
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
+      <WelcomePopup />
       <Navigation />
       <Hero />
       <PartnershipBanner />

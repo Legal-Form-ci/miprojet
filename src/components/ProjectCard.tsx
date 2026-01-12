@@ -121,10 +121,12 @@ export const ProjectCard = ({
 
         {/* Action Button */}
         <div className="mt-auto pt-2">
-          <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm">
-            <Eye className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-            {t('projects.requestAccess')}
-          </Button>
+          <a href="/access-request/placeholder">
+            <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm">
+              <Eye className="mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              {t('projects.requestAccess')}
+            </Button>
+          </a>
         </div>
       </CardContent>
     </Card>

@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          message: string | null
+          project_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -44,6 +91,48 @@ export type Database = {
           record_id?: string | null
           table_name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      backup_settings: {
+        Row: {
+          external_storage_config: Json | null
+          external_storage_type: string | null
+          frequency: string | null
+          id: string
+          is_enabled: boolean | null
+          last_backup_at: string | null
+          next_backup_at: string | null
+          retention_days: number | null
+          tables_to_backup: string[] | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          external_storage_config?: Json | null
+          external_storage_type?: string | null
+          frequency?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_backup_at?: string | null
+          next_backup_at?: string | null
+          retention_days?: number | null
+          tables_to_backup?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          external_storage_config?: Json | null
+          external_storage_type?: string | null
+          frequency?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          last_backup_at?: string | null
+          next_backup_at?: string | null
+          retention_days?: number | null
+          tables_to_backup?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -128,6 +217,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      database_backups: {
+        Row: {
+          backup_name: string
+          backup_type: string | null
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          file_path: string | null
+          file_size: number | null
+          format: string | null
+          id: string
+          status: string | null
+          tables_included: string[] | null
+        }
+        Insert: {
+          backup_name: string
+          backup_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          format?: string | null
+          id?: string
+          status?: string | null
+          tables_included?: string[] | null
+        }
+        Update: {
+          backup_name?: string
+          backup_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          format?: string | null
+          id?: string
+          status?: string | null
+          tables_included?: string[] | null
+        }
+        Relationships: []
       }
       faqs: {
         Row: {
