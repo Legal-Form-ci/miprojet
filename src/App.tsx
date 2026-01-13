@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { VirtualAssistant } from "@/components/VirtualAssistant";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -27,6 +28,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminInit from "./pages/admin/AdminInit";
 import ServiceRequest from "./pages/ServiceRequest";
 import ProjectDetail from "./pages/ProjectDetail";
+import AccessRequest from "./pages/AccessRequest";
 
 // Lazy load service and payment pages
 const StructuringService = lazy(() => import("./pages/services/StructuringService"));
@@ -76,6 +78,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/submit-project" element={<SubmitProject />} />
             <Route path="/service-request" element={<ServiceRequest />} />
+            <Route path="/access-request/:projectId" element={<AccessRequest />} />
             
             {/* Service pages */}
             <Route path="/services" element={<Services />} />
@@ -106,6 +109,7 @@ const App = () => (
             <Route path="/faq" element={<FAQ />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:id" element={<News />} />
+            <Route path="/actualites" element={<News />} />
             
             {/* Admin */}
             <Route path="/admin/init" element={<AdminInit />} />
@@ -115,6 +119,7 @@ const App = () => (
             {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <VirtualAssistant />
         </BrowserRouter>
       </TooltipProvider>
     </LanguageProvider>

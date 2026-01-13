@@ -620,6 +620,10 @@ export type Database = {
           is_verified: boolean | null
           last_name: string | null
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
+          total_commissions: number | null
+          total_referrals: number | null
           updated_at: string
           user_type: string | null
         }
@@ -635,6 +639,10 @@ export type Database = {
           is_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          total_commissions?: number | null
+          total_referrals?: number | null
           updated_at?: string
           user_type?: string | null
         }
@@ -650,6 +658,10 @@ export type Database = {
           is_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
+          total_commissions?: number | null
+          total_referrals?: number | null
           updated_at?: string
           user_type?: string | null
         }
@@ -743,6 +755,73 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          commission_amount: number | null
+          commission_rate: number | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          paid_at: string | null
+          payment_id: string | null
+          referee_id: string | null
+          referral_code: string
+          referral_link: string
+          referrer_id: string
+          status: string | null
+        }
+        Insert: {
+          commission_amount?: number | null
+          commission_rate?: number | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          referee_id?: string | null
+          referral_code: string
+          referral_link: string
+          referrer_id: string
+          status?: string | null
+        }
+        Update: {
+          commission_amount?: number | null
+          commission_rate?: number | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          payment_id?: string | null
+          referee_id?: string | null
+          referral_code?: string
+          referral_link?: string
+          referrer_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payment_history"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments_secure"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sectors: {
         Row: {
@@ -980,6 +1059,7 @@ export type Database = {
     }
     Functions: {
       generate_invoice_number: { Args: never; Returns: string }
+      generate_referral_code: { Args: { user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
