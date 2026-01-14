@@ -17,12 +17,13 @@ const menuItems = [
   { id: "projects", label: "Projets", icon: FolderKanban },
   { id: "users", label: "Utilisateurs", icon: Users },
   { id: "requests", label: "Demandes", icon: FileText },
+  { id: "evaluations", label: "Évaluations", icon: BarChart3 },
+  { id: "access-requests", label: "Demandes d'accès", icon: Shield },
   { id: "news", label: "Actualités", icon: Newspaper },
   { id: "invoices", label: "Factures", icon: Receipt },
   { id: "payments", label: "Paiements", icon: CreditCard },
+  { id: "database", label: "Base de données", icon: Shield },
   { id: "faq", label: "FAQ", icon: HelpCircle },
-  { id: "analytics", label: "Analytiques", icon: BarChart3 },
-  { id: "security", label: "Sécurité", icon: Shield },
   { id: "settings", label: "Paramètres", icon: Settings },
 ];
 
