@@ -24,6 +24,9 @@ import { AdminFAQManager } from "@/components/admin/AdminFAQManager";
 import { AdminPaymentsTable } from "@/components/admin/AdminPaymentsTable";
 import { AdminInvoicesTable } from "@/components/admin/AdminInvoicesTable";
 import { AdminGuide } from "@/components/admin/AdminGuide";
+import { AdminAccessRequests } from "@/components/admin/AdminAccessRequests";
+import { AdminDatabaseManager } from "@/components/admin/AdminDatabaseManager";
+import { AdminEvaluationsManager } from "@/components/admin/AdminEvaluationsManager";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, adminChecked, signOut } = useAuth();
@@ -173,6 +176,18 @@ const AdminDashboard = () => {
             
             <TabsContent value="faq" className="space-y-6">
               <AdminFAQManager />
+            </TabsContent>
+            
+            <TabsContent value="evaluations" className="space-y-6">
+              <AdminEvaluationsManager />
+            </TabsContent>
+            
+            <TabsContent value="access-requests" className="space-y-6">
+              <AdminAccessRequests />
+            </TabsContent>
+            
+            <TabsContent value="database" className="space-y-6">
+              <AdminDatabaseManager />
             </TabsContent>
             
             <TabsContent value="settings" className="space-y-6">

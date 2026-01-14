@@ -667,6 +667,98 @@ export type Database = {
         }
         Relationships: []
       }
+      project_evaluations: {
+        Row: {
+          actions_structuration: Json | null
+          certified_at: string | null
+          certified_by: string | null
+          created_at: string
+          evaluated_by: string | null
+          evaluation_data: Json | null
+          faiblesses: Json | null
+          forces: Json | null
+          id: string
+          is_active: boolean | null
+          is_certified: boolean | null
+          messages_strategiques: Json | null
+          niveau: string | null
+          project_id: string
+          recommandations: Json | null
+          resume: string | null
+          score_equipe: number | null
+          score_financier: number | null
+          score_global: number | null
+          score_impact: number | null
+          score_maturite: number | null
+          score_porteur: number | null
+          score_projet: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actions_structuration?: Json | null
+          certified_at?: string | null
+          certified_by?: string | null
+          created_at?: string
+          evaluated_by?: string | null
+          evaluation_data?: Json | null
+          faiblesses?: Json | null
+          forces?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_certified?: boolean | null
+          messages_strategiques?: Json | null
+          niveau?: string | null
+          project_id: string
+          recommandations?: Json | null
+          resume?: string | null
+          score_equipe?: number | null
+          score_financier?: number | null
+          score_global?: number | null
+          score_impact?: number | null
+          score_maturite?: number | null
+          score_porteur?: number | null
+          score_projet?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actions_structuration?: Json | null
+          certified_at?: string | null
+          certified_by?: string | null
+          created_at?: string
+          evaluated_by?: string | null
+          evaluation_data?: Json | null
+          faiblesses?: Json | null
+          forces?: Json | null
+          id?: string
+          is_active?: boolean | null
+          is_certified?: boolean | null
+          messages_strategiques?: Json | null
+          niveau?: string | null
+          project_id?: string
+          recommandations?: Json | null
+          resume?: string | null
+          score_equipe?: number | null
+          score_financier?: number | null
+          score_global?: number | null
+          score_impact?: number | null
+          score_maturite?: number | null
+          score_porteur?: number | null
+          score_projet?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_evaluations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_updates: {
         Row: {
           content: string | null
@@ -707,6 +799,7 @@ export type Database = {
           created_at: string
           description: string | null
           end_date: string | null
+          fonds_disponibles: string | null
           funding_goal: number | null
           funds_raised: number
           id: string
@@ -725,6 +818,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          fonds_disponibles?: string | null
           funding_goal?: number | null
           funds_raised?: number
           id?: string
@@ -743,6 +837,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          fonds_disponibles?: string | null
           funding_goal?: number | null
           funds_raised?: number
           id?: string
