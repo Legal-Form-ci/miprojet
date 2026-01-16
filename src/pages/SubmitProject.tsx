@@ -119,6 +119,8 @@ const SubmitProject = () => {
     email: "",
     profileType: "",
     profileTypeOther: "",
+    referralCode: "",
+    referrerName: "",
     
     // Step 2 - Projet identification
     projectTitle: "",
@@ -138,6 +140,7 @@ const SubmitProject = () => {
     
     // Step 4 - Données financières
     estimatedBudget: "",
+    fondsDisponibles: "",
     
     // Step 5 - Financement & Maturité
     fundingType: "",
@@ -167,6 +170,27 @@ const SubmitProject = () => {
       t('submitProject.pageTitle') || "Soumettre un Projet | MIPROJET",
       t('submitProject.pageDescription') || "Soumettez votre projet pour structuration professionnelle selon les normes ISO 21500."
     );
+
+    // Check for referral code in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      setFormData(prev => ({ ...prev, referralCode: refCode.toUpperCase() }));
+      // Fetch referrer name
+      supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('referral_code', refCode.toUpperCase())
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setFormData(prev => ({
+              ...prev,
+              referrerName: `${data.first_name || ''} ${data.last_name || ''}`.trim()
+            }));
+          }
+        });
+    }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -233,6 +257,7 @@ const SubmitProject = () => {
         country: formData.country,
         city: formData.city,
         funding_goal: parseFloat(formData.estimatedBudget) || 0,
+        fonds_disponibles: formData.fondsDisponibles,
         status: "draft",
       }).select().single();
 
@@ -249,6 +274,26 @@ const SubmitProject = () => {
         description: formData.executiveSummary,
         has_business_plan: formData.availableDocuments.includes("Business plan"),
       });
+
+      // Handle referral if code provided
+      if (formData.referralCode) {
+        const { data: referrer } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('referral_code', formData.referralCode)
+          .maybeSingle();
+        
+        if (referrer) {
+          // Create referral record
+          await supabase.from('referrals').insert({
+            referrer_id: referrer.id,
+            referee_id: user.id,
+            referral_code: formData.referralCode,
+            referral_link: `${window.location.origin}/submit-project?ref=${formData.referralCode}`,
+            status: 'pending'
+          });
+        }
+      }
 
       if (files.length > 0 && data) {
         await uploadFiles(data.id);
@@ -362,6 +407,50 @@ const SubmitProject = () => {
                 />
               )}
             </div>
+            
+            {/* Code Parrain Section */}
+            <div className="space-y-2 pt-4 border-t">
+              <Label htmlFor="referralCode">Code du parrain (facultatif)</Label>
+              <Input
+                id="referralCode"
+                value={formData.referralCode}
+                onChange={(e) => {
+                  const code = e.target.value.toUpperCase();
+                  setFormData({ ...formData, referralCode: code, referrerName: "" });
+                  // Auto-fetch referrer name
+                  if (code.length >= 6) {
+                    supabase
+                      .from('profiles')
+                      .select('first_name, last_name')
+                      .eq('referral_code', code)
+                      .maybeSingle()
+                      .then(({ data }) => {
+                        if (data) {
+                          setFormData(prev => ({
+                            ...prev,
+                            referrerName: `${data.first_name || ''} ${data.last_name || ''}`.trim()
+                          }));
+                        }
+                      });
+                  }
+                }}
+                placeholder="Ex: REF-ABC123"
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground">
+                Si vous avez été référé par un parrain, entrez son code pour bénéficier d'avantages
+              </p>
+            </div>
+            
+            {formData.referrerName && (
+              <div className="bg-primary/10 border border-primary/20 rounded-lg p-4 flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Parrain identifié</p>
+                  <p className="text-sm text-muted-foreground">{formData.referrerName}</p>
+                </div>
+              </div>
+            )}
           </div>
         );
       
@@ -503,6 +592,25 @@ const SubmitProject = () => {
                 placeholder="Ex: 50000000"
               />
               <p className="text-xs text-muted-foreground">{t('submitProject.budgetNote')}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Fonds disponibles *</Label>
+              <Select 
+                value={formData.fondsDisponibles} 
+                onValueChange={(v) => setFormData({ ...formData, fondsDisponibles: v })}
+              >
+                <SelectTrigger><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="moins_1m">Moins de 1 million FCFA</SelectItem>
+                  <SelectItem value="1_5m">Entre 1 et 5 millions FCFA</SelectItem>
+                  <SelectItem value="5_10m">Entre 5 et 10 millions FCFA</SelectItem>
+                  <SelectItem value="10_20m">Entre 10 et 20 millions FCFA</SelectItem>
+                  <SelectItem value="20_50m">Entre 20 et 50 millions FCFA</SelectItem>
+                  <SelectItem value="50_100m">Entre 50 et 100 millions FCFA</SelectItem>
+                  <SelectItem value="plus_100m">100 millions FCFA et plus</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Ce champ permet d'évaluer votre capacité financière actuelle</p>
             </div>
           </div>
         );
