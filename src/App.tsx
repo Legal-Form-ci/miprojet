@@ -34,6 +34,7 @@ import AccessRequest from "./pages/AccessRequest";
 const StructuringService = lazy(() => import("./pages/services/StructuringService"));
 const EnterpriseService = lazy(() => import("./pages/services/EnterpriseService"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
+const ProjectEvaluation = lazy(() => import("./pages/ProjectEvaluation"));
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,11 @@ const App = () => (
             {/* Dashboard */}
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/*" element={<Dashboard />} />
+            <Route path="/project-evaluation/:projectId" element={
+              <Suspense fallback={<PageLoader />}>
+                <ProjectEvaluation />
+              </Suspense>
+            } />
             
             {/* Payment */}
             <Route path="/payment/callback" element={

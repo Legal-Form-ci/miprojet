@@ -27,6 +27,7 @@ import { AdminGuide } from "@/components/admin/AdminGuide";
 import { AdminAccessRequests } from "@/components/admin/AdminAccessRequests";
 import { AdminDatabaseManager } from "@/components/admin/AdminDatabaseManager";
 import { AdminEvaluationsManager } from "@/components/admin/AdminEvaluationsManager";
+import { SmartInvoiceGenerator } from "@/components/admin/SmartInvoiceGenerator";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, adminChecked, signOut } = useAuth();
@@ -163,7 +164,18 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="invoices" className="space-y-6">
-              <AdminInvoicesTable />
+              <Tabs defaultValue="list">
+                <TabsList>
+                  <TabsTrigger value="list">Liste des factures</TabsTrigger>
+                  <TabsTrigger value="generate">Générer une facture</TabsTrigger>
+                </TabsList>
+                <TabsContent value="list" className="pt-4">
+                  <AdminInvoicesTable />
+                </TabsContent>
+                <TabsContent value="generate" className="pt-4">
+                  <SmartInvoiceGenerator />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
             
             <TabsContent value="payments" className="space-y-6">

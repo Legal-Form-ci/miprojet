@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { InvoiceHistory } from "@/components/dashboard/InvoiceHistory";
+import { EvaluationsTab } from "@/components/dashboard/EvaluationsTab";
 import {
   FolderKanban, FileText, MessageSquare, Plus,
   Eye, Settings, Clock, CheckCircle, Award, ArrowRight
@@ -193,8 +194,9 @@ export const ProjectOwnerDashboard = () => {
 
       {/* Tabs */}
       <Tabs defaultValue="projects" className="space-y-4">
-        <TabsList className="w-full sm:w-auto grid grid-cols-4 sm:inline-flex">
+        <TabsList className="w-full sm:w-auto grid grid-cols-5 sm:inline-flex">
           <TabsTrigger value="projects" className="text-xs sm:text-sm">Projets</TabsTrigger>
+          <TabsTrigger value="evaluations" className="text-xs sm:text-sm">Évaluations</TabsTrigger>
           <TabsTrigger value="requests" className="text-xs sm:text-sm">Demandes</TabsTrigger>
           <TabsTrigger value="invoices" className="text-xs sm:text-sm">Factures</TabsTrigger>
           <TabsTrigger value="messages" className="text-xs sm:text-sm">Messages</TabsTrigger>
@@ -243,6 +245,10 @@ export const ProjectOwnerDashboard = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="evaluations" className="space-y-4">
+          <EvaluationsTab projects={projects} />
         </TabsContent>
 
         <TabsContent value="requests" className="space-y-4">
