@@ -371,6 +371,34 @@ export const translations: Record<Language, Record<string, string>> = {
     'notifications.empty': 'Aucune notification',
     'notifications.markAllRead': 'Tout marquer comme lu',
     'notifications.new': 'Nouvelle notification',
+    
+    // FAQ
+    'faq.pageTitle': 'Foire aux Questions',
+    'faq.pageSubtitle': 'Trouvez rapidement des réponses à vos questions sur MIPROJET',
+    'faq.searchPlaceholder': 'Rechercher une question...',
+    'faq.noResults': 'Aucune question trouvée pour votre recherche',
+    'faq.stillNeedHelp': "Vous n'avez pas trouvé votre réponse ?",
+    'faq.contactUs': 'Notre équipe est là pour vous aider',
+    'faq.contactLink': 'Contactez-nous',
+    'faq.allCategories': 'Toutes les questions',
+    'faq.categoryGeneral': 'Général',
+    'faq.categoryProjects': 'Projets',
+    'faq.categoryFunding': 'Structuration',
+    'faq.categoryAccount': 'Compte',
+    'faq.categorySecurity': 'Sécurité',
+    'faq.categoryEnterprise': 'Entreprises',
+    
+    // Referral / Parrainage
+    'referral.title': 'Programme de Parrainage',
+    'referral.subtitle': 'Parrainez et gagnez des commissions en MiP',
+    'referral.yourCode': 'Votre code parrain',
+    'referral.copyLink': 'Copier le lien',
+    'referral.totalEarnings': 'Gains totaux',
+    'referral.pendingCommissions': 'Commissions en attente',
+    'referral.paidCommissions': 'Commissions payées',
+    'referral.totalReferrals': 'Parrainages effectués',
+    'referral.conversionRate': 'Taux de conversion (1 MiP = 1230 FCFA)',
+    'referral.history': 'Historique des parrainages',
   },
   
   en: {

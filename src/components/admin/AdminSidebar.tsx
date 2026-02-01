@@ -18,6 +18,7 @@ const menuItems = [
   { id: "users", label: "Utilisateurs", icon: Users },
   { id: "requests", label: "Demandes", icon: FileText },
   { id: "evaluations", label: "Évaluations", icon: BarChart3 },
+  { id: "referrals", label: "Parrainages", icon: Users },
   { id: "access-requests", label: "Demandes d'accès", icon: Shield },
   { id: "news", label: "Actualités", icon: Newspaper },
   { id: "invoices", label: "Factures", icon: Receipt },
