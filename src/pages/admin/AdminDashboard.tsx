@@ -28,6 +28,7 @@ import { AdminAccessRequests } from "@/components/admin/AdminAccessRequests";
 import { AdminDatabaseManager } from "@/components/admin/AdminDatabaseManager";
 import { AdminEvaluationsManager } from "@/components/admin/AdminEvaluationsManager";
 import { SmartInvoiceGenerator } from "@/components/admin/SmartInvoiceGenerator";
+import { AdminReferralsManager } from "@/components/admin/AdminReferralsManager";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, adminChecked, signOut } = useAuth();
@@ -192,6 +193,10 @@ const AdminDashboard = () => {
             
             <TabsContent value="evaluations" className="space-y-6">
               <AdminEvaluationsManager />
+            </TabsContent>
+            
+            <TabsContent value="referrals" className="space-y-6">
+              <AdminReferralsManager />
             </TabsContent>
             
             <TabsContent value="access-requests" className="space-y-6">

@@ -14,25 +14,22 @@ import { cn } from "@/lib/utils";
 import cachetMiprojet from "@/assets/cachet-miprojet.png";
 import signatureDG from "@/assets/signature-dg.png";
 
-interface ServiceRequest {
-  id: string;
-  company_name: string | null;
-  service_type: string;
-  user_id: string;
-  sector: string | null;
-  profiles?: {
-    first_name: string | null;
-    last_name: string | null;
-    phone: string | null;
-  };
-  user_email?: string;
-}
-
 interface InvoiceItem {
   description: string;
   quantity: number;
   unitPrice: number;
   total: number;
+}
+
+interface ClientData {
+  id: string;
+  user_id: string;
+  name: string;
+  company_name: string | null;
+  phone: string | null;
+  service_type: string | null;
+  source: 'profile' | 'request';
+  request_id?: string;
 }
 
 const serviceOptions = [
@@ -44,7 +41,7 @@ const serviceOptions = [
   { value: 'risk_analysis', label: 'Analyse des risques', price: 80000 },
   { value: 'training', label: 'Formation / Coaching', price: 50000 },
   { value: 'consulting', label: 'Consultance (par heure)', price: 25000 },
-  { value: 'company_creation', label: 'Création d\'entreprise', price: 75000 },
+  { value: 'company_creation', label: "Création d'entreprise", price: 75000 },
   { value: 'custom', label: 'Service personnalisé', price: 0 },
 ];
 
@@ -58,8 +55,8 @@ export const SmartInvoiceGenerator = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [requests, setRequests] = useState<ServiceRequest[]>([]);
-  const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [clients, setClients] = useState<ClientData[]>([]);
+  const [selectedClient, setSelectedClient] = useState<ClientData | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -78,49 +75,65 @@ export const SmartInvoiceGenerator = () => {
   });
 
   useEffect(() => {
-    fetchServiceRequests();
+    fetchClients();
   }, []);
 
-  const fetchServiceRequests = async () => {
+  const fetchClients = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('service_requests')
-      .select(`
-        id, company_name, service_type, user_id, sector,
-        profiles:user_id (first_name, last_name, phone)
-      `)
+    const clientsData: ClientData[] = [];
+
+    // Fetch ALL profiles (users)
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, company_name, phone')
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
-      // Fetch emails for each user
-      const requestsWithEmails = await Promise.all(
-        data.map(async (req: any) => {
-          const { data: userData } = await supabase.auth.admin.getUserById(req.user_id).catch(() => ({ data: null }));
-          return {
-            ...req,
-            user_email: userData?.user?.email || ''
-          };
-        })
-      );
-      setRequests(requestsWithEmails as ServiceRequest[]);
+    if (!profilesError && profiles) {
+      profiles.forEach((profile: any) => {
+        const name = `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Sans nom';
+        clientsData.push({
+          id: profile.id,
+          user_id: profile.id,
+          name,
+          company_name: profile.company_name,
+          phone: profile.phone,
+          service_type: null,
+          source: 'profile'
+        });
+      });
     }
+
+    // Also fetch service requests for additional context
+    const { data: requests, error: requestsError } = await supabase
+      .from('service_requests')
+      .select(`id, company_name, service_type, user_id, sector`)
+      .order('created_at', { ascending: false });
+
+    if (!requestsError && requests) {
+      requests.forEach((req: any) => {
+        // Check if this user is already in the list
+        const existingIndex = clientsData.findIndex(c => c.user_id === req.user_id);
+        if (existingIndex >= 0) {
+          // Update with service request info
+          clientsData[existingIndex].service_type = req.service_type;
+          clientsData[existingIndex].request_id = req.id;
+        }
+      });
+    }
+
+    setClients(clientsData);
     setLoading(false);
   };
 
-  const handleSelectRequest = (request: ServiceRequest) => {
-    setSelectedRequest(request);
+  const handleSelectClient = (client: ClientData) => {
+    setSelectedClient(client);
     setSearchOpen(false);
-    
-    const profile = request.profiles;
-    const fullName = profile 
-      ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
-      : request.company_name || '';
 
     setInvoiceData(prev => ({
       ...prev,
-      clientName: fullName || request.company_name || '',
-      clientPhone: profile?.phone || '',
-      clientEmail: request.user_email || '',
+      clientName: client.name || client.company_name || '',
+      clientPhone: client.phone || '',
+      clientEmail: '',
     }));
   };
 
@@ -169,7 +182,7 @@ export const SmartInvoiceGenerator = () => {
   const total = subtotal + taxAmount;
 
   const handleSaveAndSend = async () => {
-    if (!invoiceData.clientName || !selectedRequest) {
+    if (!invoiceData.clientName || !selectedClient) {
       toast({ title: "Erreur", description: "Veuillez sélectionner un demandeur", variant: "destructive" });
       return;
     }
@@ -182,8 +195,8 @@ export const SmartInvoiceGenerator = () => {
       // Create invoice
       const { data: invoice, error } = await supabase.from('invoices').insert([{
         invoice_number: invoiceData.invoiceNumber,
-        user_id: selectedRequest.user_id,
-        service_request_id: selectedRequest.id,
+        user_id: selectedClient.user_id,
+        service_request_id: selectedClient.request_id || null,
         items: invoiceData.items as any,
         subtotal: subtotal,
         tax_rate: invoiceData.taxRate,
@@ -199,17 +212,16 @@ export const SmartInvoiceGenerator = () => {
 
       // Create notification for the user
       await supabase.from('notifications').insert({
-        user_id: selectedRequest.user_id,
+        user_id: selectedClient.user_id,
         title: `Nouvelle facture ${invoiceData.invoiceNumber}`,
-        message: `Une facture de ${total.toLocaleString('fr-FR')} FCFA a été émise. Échéance: ${new Date(invoiceData.dueDate).toLocaleDateString('fr-FR')}`,
+        message: `Une facture de ${total.toLocaleString('fr-FR')} FCFA a été émise.`,
         type: 'invoice',
-        link: `/dashboard/invoices`,
-        metadata: { invoiceId: invoice.id, invoiceNumber: invoiceData.invoiceNumber, amount: total }
+        link: `/dashboard/invoices`
       });
 
       toast({ 
         title: "Succès", 
-        description: `Facture ${invoiceData.invoiceNumber} créée et envoyée au demandeur` 
+        description: `Facture ${invoiceData.invoiceNumber} créée et envoyée` 
       });
 
       // Reset form
@@ -221,7 +233,7 @@ export const SmartInvoiceGenerator = () => {
         clientPhone: '',
         items: [{ description: '', quantity: 1, unitPrice: 0, total: 0 }],
       });
-      setSelectedRequest(null);
+      setSelectedClient(null);
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
     } finally {
@@ -229,14 +241,11 @@ export const SmartInvoiceGenerator = () => {
     }
   };
 
-  const filteredRequests = requests.filter(req => {
+  const filteredClients = clients.filter(client => {
     const searchLower = searchQuery.toLowerCase();
-    const name = req.profiles 
-      ? `${req.profiles.first_name || ''} ${req.profiles.last_name || ''}`.toLowerCase()
-      : '';
-    return name.includes(searchLower) || 
-           (req.company_name?.toLowerCase().includes(searchLower)) ||
-           req.service_type.toLowerCase().includes(searchLower);
+    return client.name.toLowerCase().includes(searchLower) || 
+           (client.company_name?.toLowerCase().includes(searchLower)) ||
+           (client.service_type?.toLowerCase().includes(searchLower));
   });
 
   return (
@@ -263,12 +272,10 @@ export const SmartInvoiceGenerator = () => {
                   aria-expanded={searchOpen}
                   className="w-full justify-between"
                 >
-                  {selectedRequest ? (
+                  {selectedClient ? (
                     <span>
-                      {selectedRequest.profiles 
-                        ? `${selectedRequest.profiles.first_name || ''} ${selectedRequest.profiles.last_name || ''}`.trim()
-                        : selectedRequest.company_name
-                      } - {selectedRequest.service_type}
+                      {selectedClient.name}
+                      {selectedClient.service_type && ` - ${selectedClient.service_type}`}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">Rechercher un demandeur...</span>
@@ -279,34 +286,32 @@ export const SmartInvoiceGenerator = () => {
               <PopoverContent className="w-full p-0" align="start">
                 <Command>
                   <CommandInput 
-                    placeholder="Rechercher par nom, entreprise ou service..." 
+                    placeholder="Rechercher par nom ou entreprise..." 
                     value={searchQuery}
                     onValueChange={setSearchQuery}
                   />
                   <CommandList>
-                    <CommandEmpty>Aucun demandeur trouvé</CommandEmpty>
+                    <CommandEmpty>
+                      {loading ? "Chargement..." : "Aucun demandeur trouvé"}
+                    </CommandEmpty>
                     <CommandGroup>
-                      {filteredRequests.map((req) => (
+                      {filteredClients.map((client) => (
                         <CommandItem
-                          key={req.id}
-                          value={req.id}
-                          onSelect={() => handleSelectRequest(req)}
+                          key={client.id}
+                          value={client.id}
+                          onSelect={() => handleSelectClient(client)}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              selectedRequest?.id === req.id ? "opacity-100" : "opacity-0"
+                              selectedClient?.id === client.id ? "opacity-100" : "opacity-0"
                             )}
                           />
                           <div className="flex flex-col">
-                            <span className="font-medium">
-                              {req.profiles 
-                                ? `${req.profiles.first_name || ''} ${req.profiles.last_name || ''}`.trim()
-                                : req.company_name || 'Sans nom'
-                              }
-                            </span>
+                            <span className="font-medium">{client.name}</span>
                             <span className="text-xs text-muted-foreground">
-                              {req.service_type} • {req.sector || 'N/A'}
+                              {client.company_name || 'Particulier'}
+                              {client.service_type && ` • ${client.service_type}`}
                             </span>
                           </div>
                         </CommandItem>
@@ -319,7 +324,7 @@ export const SmartInvoiceGenerator = () => {
           </div>
 
           {/* Auto-filled Client Info */}
-          {selectedRequest && (
+          {selectedClient && (
             <div className="grid md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
               <div>
                 <Label className="text-xs text-muted-foreground">Nom du client</Label>
@@ -330,8 +335,8 @@ export const SmartInvoiceGenerator = () => {
                 <p className="font-medium">{invoiceData.clientPhone || '-'}</p>
               </div>
               <div>
-                <Label className="text-xs text-muted-foreground">Email</Label>
-                <p className="font-medium">{invoiceData.clientEmail || '-'}</p>
+                <Label className="text-xs text-muted-foreground">Entreprise</Label>
+                <p className="font-medium">{selectedClient.company_name || '-'}</p>
               </div>
             </div>
           )}
@@ -430,58 +435,20 @@ export const SmartInvoiceGenerator = () => {
             ))}
           </div>
 
-          {/* Delivery & Payment Terms */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Délai de livraison</Label>
-              <Input
-                value={invoiceData.deliveryTime}
-                onChange={(e) => setInvoiceData({ ...invoiceData, deliveryTime: e.target.value })}
-                placeholder="Ex: 15 jours ouvrables"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Modalités de paiement</Label>
-              <Input
-                value={invoiceData.paymentTerms}
-                onChange={(e) => setInvoiceData({ ...invoiceData, paymentTerms: e.target.value })}
-                placeholder="Ex: Paiement intégral avant démarrage"
-              />
-            </div>
-          </div>
-
           {/* Totals */}
-          <div className="border-t pt-4">
-            <div className="flex justify-end">
-              <div className="w-full md:w-1/3 space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Sous-total HT</span>
-                  <span>{subtotal.toLocaleString()} FCFA</span>
-                </div>
-                <div className="flex justify-between items-center gap-2">
-                  <span className="text-muted-foreground">TVA ({invoiceData.taxRate}%)</span>
-                  <span>{taxAmount.toLocaleString()} FCFA</span>
-                </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Total TTC</span>
-                  <span className="text-primary">{total.toLocaleString()} FCFA</span>
-                </div>
+          <div className="flex justify-end">
+            <div className="w-80 space-y-2">
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">Sous-total HT</span>
+                <span className="font-medium">{subtotal.toLocaleString()} FCFA</span>
               </div>
-            </div>
-          </div>
-
-          {/* Signature & Stamp Preview */}
-          <div className="border-t pt-6">
-            <Label className="text-lg font-semibold mb-4 block">Cachet et Signature</Label>
-            <div className="flex justify-end gap-8 items-end">
-              <div className="text-center">
-                <img src={cachetMiprojet} alt="Cachet MIPROJET" className="h-24 w-auto mx-auto" />
-                <p className="text-xs text-muted-foreground mt-2">Cachet officiel</p>
+              <div className="flex justify-between py-2 border-b">
+                <span className="text-muted-foreground">TVA ({invoiceData.taxRate}%)</span>
+                <span className="font-medium">{taxAmount.toLocaleString()} FCFA</span>
               </div>
-              <div className="text-center">
-                <img src={signatureDG} alt="Signature DG" className="h-16 w-auto mx-auto" />
-                <p className="text-sm font-medium mt-2">Le Directeur Général</p>
-                <p className="text-xs text-muted-foreground">MIPROJET COOP</p>
+              <div className="flex justify-between py-2 text-lg font-bold">
+                <span>Total TTC</span>
+                <span className="text-primary">{total.toLocaleString()} FCFA</span>
               </div>
             </div>
           </div>
@@ -497,10 +464,20 @@ export const SmartInvoiceGenerator = () => {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end gap-3">
-            <Button onClick={handleSaveAndSend} disabled={saving || !selectedRequest}>
-              <Send className="h-4 w-4 mr-2" />
-              {saving ? 'Envoi en cours...' : 'Générer et envoyer au demandeur'}
+          <div className="flex justify-end gap-4">
+            <Button
+              onClick={handleSaveAndSend}
+              disabled={saving || !selectedClient}
+              className="min-w-40"
+            >
+              {saving ? (
+                <>Envoi en cours...</>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Créer et Envoyer
+                </>
+              )}
             </Button>
           </div>
         </CardContent>
