@@ -353,6 +353,12 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.confirm': 'Confirmer',
     'common.download': 'Télécharger',
     'common.upload': 'Téléverser',
+    'common.readMore': 'Lire la suite',
+    
+    // News
+    'news.latestTitle': 'Dernières Actualités',
+    'news.latestSubtitle': 'Restez informé des dernières nouvelles et opportunités',
+    'news.viewAll': 'Voir toutes les actualités',
     
     // Footer
     'footer.description': 'Plateforme panafricaine spécialisée dans la structuration professionnelle et l\'accompagnement de projets à fort impact en Afrique.',

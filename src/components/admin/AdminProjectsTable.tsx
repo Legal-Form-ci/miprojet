@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -16,36 +18,77 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Search, Eye, Edit, Trash2, CheckCircle, XCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { 
+  MoreHorizontal, Search, Eye, Edit, Trash2, CheckCircle, XCircle, 
+  Plus, RefreshCw, FolderOpen, Globe
+} from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface Project {
   id: string;
   title: string;
+  description: string | null;
   category: string | null;
+  sector: string | null;
   status: string;
   funding_goal: number | null;
   funds_raised: number;
+  fonds_disponibles: string | null;
   risk_score: string | null;
   created_at: string;
   country: string | null;
   city: string | null;
+  owner_id: string;
 }
 
 export const AdminProjectsTable = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    status: "",
+    funding_goal: 0,
+    risk_score: ""
+  });
   const { toast } = useToast();
 
   const fetchProjects = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('projects')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (filterStatus !== "all") {
+        query = query.eq('status', filterStatus);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setProjects(data || []);
@@ -70,7 +113,7 @@ export const AdminProjectsTable = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [filterStatus]);
 
   const updateProjectStatus = async (projectId: string, status: string) => {
     try {
@@ -80,7 +123,72 @@ export const AdminProjectsTable = () => {
         .eq('id', projectId);
 
       if (error) throw error;
+      
+      // Notify project owner
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        await supabase.from('notifications').insert({
+          user_id: project.owner_id,
+          title: `Projet ${status === 'published' ? 'publié' : status === 'rejected' ? 'rejeté' : 'mis à jour'}`,
+          message: `Votre projet "${project.title}" a été ${status === 'published' ? 'publié sur la plateforme' : status === 'rejected' ? 'rejeté' : 'mis à jour'}.`,
+          type: 'project_update',
+          link: '/dashboard'
+        });
+      }
+      
       toast({ title: "Succès", description: `Statut mis à jour: ${status}` });
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est irréversible.")) return;
+
+    try {
+      // Delete related records first
+      await supabase.from('project_evaluations').delete().eq('project_id', projectId);
+      await supabase.from('access_requests').delete().eq('project_id', projectId);
+      
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+      toast({ title: "Succès", description: "Projet supprimé avec succès" });
+      fetchProjects();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const openEditDialog = (project: Project) => {
+    setSelectedProject(project);
+    setEditForm({
+      title: project.title,
+      description: project.description || "",
+      category: project.category || "",
+      status: project.status,
+      funding_goal: project.funding_goal || 0,
+      risk_score: project.risk_score || ""
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateProject = async () => {
+    if (!selectedProject) return;
+    
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update(editForm)
+        .eq('id', selectedProject.id);
+
+      if (error) throw error;
+      
+      toast({ title: "Succès", description: "Projet mis à jour" });
+      setShowEditDialog(false);
       fetchProjects();
     } catch (error: any) {
       toast({ title: "Erreur", description: error.message, variant: "destructive" });
@@ -91,7 +199,9 @@ export const AdminProjectsTable = () => {
     const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline", label: string }> = {
       draft: { variant: "secondary", label: "Brouillon" },
       pending: { variant: "outline", label: "En attente" },
+      in_structuring: { variant: "outline", label: "En structuration" },
       published: { variant: "default", label: "Publié" },
+      validated: { variant: "default", label: "Validé" },
       funded: { variant: "default", label: "Financé" },
       rejected: { variant: "destructive", label: "Rejeté" },
     };
@@ -111,109 +221,272 @@ export const AdminProjectsTable = () => {
 
   const filteredProjects = projects.filter(p =>
     p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.category?.toLowerCase().includes(searchTerm.toLowerCase())
+    p.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.sector?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
-    return (
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <FolderOpen className="h-6 w-6" />
+            Gestion des Projets
+          </h2>
+          <p className="text-muted-foreground">Gérez tous les projets de la plateforme</p>
+        </div>
+        <Button onClick={fetchProjects} variant="outline">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Actualiser
+        </Button>
+      </div>
+
+      {/* Filters */}
       <Card>
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-12 bg-muted rounded"></div>
-            ))}
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher un projet..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="draft">Brouillons</SelectItem>
+                <SelectItem value="pending">En attente</SelectItem>
+                <SelectItem value="in_structuring">En structuration</SelectItem>
+                <SelectItem value="published">Publiés</SelectItem>
+                <SelectItem value="validated">Validés</SelectItem>
+                <SelectItem value="rejected">Rejetés</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
-    );
-  }
 
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Liste des Projets ({projects.length})</CardTitle>
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+      {/* Projects Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Projets ({filteredProjects.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Projet</TableHead>
+                  <TableHead>Catégorie</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Score</TableHead>
+                  <TableHead className="text-right">Objectif</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProjects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium line-clamp-1">{project.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {project.city && project.country ? `${project.city}, ${project.country}` : project.country || 'N/A'}
+                        </p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{project.category || project.sector || 'N/A'}</Badge>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(project.status)}</TableCell>
+                    <TableCell>{getRiskBadge(project.risk_score)}</TableCell>
+                    <TableCell className="text-right">
+                      {project.funding_goal?.toLocaleString() || 0} FCFA
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setSelectedProject(project); setShowViewDialog(true); }}>
+                            <Eye className="mr-2 h-4 w-4" /> Voir
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEditDialog(project)}>
+                            <Edit className="mr-2 h-4 w-4" /> Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => updateProjectStatus(project.id, 'published')}>
+                            <Globe className="mr-2 h-4 w-4" /> Publier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => updateProjectStatus(project.id, 'validated')}>
+                            <CheckCircle className="mr-2 h-4 w-4" /> Valider
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => updateProjectStatus(project.id, 'rejected')}>
+                            <XCircle className="mr-2 h-4 w-4" /> Rejeter
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => deleteProject(project.id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+          
+          {!loading && filteredProjects.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              Aucun projet trouvé
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* View Dialog */}
+      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{selectedProject?.title}</DialogTitle>
+            <DialogDescription>Détails du projet</DialogDescription>
+          </DialogHeader>
+          {selectedProject && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Statut</Label>
+                  <div className="mt-1">{getStatusBadge(selectedProject.status)}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Score de risque</Label>
+                  <div className="mt-1">{getRiskBadge(selectedProject.risk_score)}</div>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Catégorie</Label>
+                  <p className="font-medium">{selectedProject.category || 'N/A'}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Localisation</Label>
+                  <p className="font-medium">{selectedProject.city}, {selectedProject.country}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Objectif de financement</Label>
+                  <p className="font-medium">{selectedProject.funding_goal?.toLocaleString()} FCFA</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Fonds disponibles</Label>
+                  <p className="font-medium">{selectedProject.fonds_disponibles || 'N/A'}</p>
+                </div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Description</Label>
+                <p className="mt-1 text-sm whitespace-pre-wrap">{selectedProject.description}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Modifier le projet</DialogTitle>
+            <DialogDescription>Modifiez les informations du projet</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Titre</Label>
+              <Input 
+                value={editForm.title}
+                onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description</Label>
+              <Textarea 
+                value={editForm.description}
+                onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                rows={4}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Catégorie</Label>
+                <Input 
+                  value={editForm.category}
+                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Objectif (FCFA)</Label>
+                <Input 
+                  type="number"
+                  value={editForm.funding_goal}
+                  onChange={(e) => setEditForm({ ...editForm, funding_goal: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Statut</Label>
+                <Select 
+                  value={editForm.status}
+                  onValueChange={(v) => setEditForm({ ...editForm, status: v })}
+                >
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Brouillon</SelectItem>
+                    <SelectItem value="pending">En attente</SelectItem>
+                    <SelectItem value="in_structuring">En structuration</SelectItem>
+                    <SelectItem value="published">Publié</SelectItem>
+                    <SelectItem value="validated">Validé</SelectItem>
+                    <SelectItem value="rejected">Rejeté</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Score de risque</Label>
+                <Select 
+                  value={editForm.risk_score}
+                  onValueChange={(v) => setEditForm({ ...editForm, risk_score: v })}
+                >
+                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="A">A - Excellent</SelectItem>
+                    <SelectItem value="B">B - Bon</SelectItem>
+                    <SelectItem value="C">C - À surveiller</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                Annuler
+              </Button>
+              <Button onClick={handleUpdateProject}>
+                Enregistrer
+              </Button>
+            </div>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Projet</TableHead>
-              <TableHead>Catégorie</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Score</TableHead>
-              <TableHead className="text-right">Objectif</TableHead>
-              <TableHead className="text-right">Collecté</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredProjects.map((project) => (
-              <TableRow key={project.id}>
-                <TableCell>
-                  <div>
-                    <p className="font-medium">{project.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {project.city}, {project.country}
-                    </p>
-                  </div>
-                </TableCell>
-                <TableCell>{project.category || 'N/A'}</TableCell>
-                <TableCell>{getStatusBadge(project.status)}</TableCell>
-                <TableCell>{getRiskBadge(project.risk_score)}</TableCell>
-                <TableCell className="text-right">
-                  {project.funding_goal?.toLocaleString()} FCFA
-                </TableCell>
-                <TableCell className="text-right">
-                  {project.funds_raised.toLocaleString()} FCFA
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
-                        <Eye className="mr-2 h-4 w-4" /> Voir
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit className="mr-2 h-4 w-4" /> Modifier
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => updateProjectStatus(project.id, 'published')}>
-                        <CheckCircle className="mr-2 h-4 w-4" /> Publier
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => updateProjectStatus(project.id, 'rejected')}>
-                        <XCircle className="mr-2 h-4 w-4" /> Rejeter
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        
-        {filteredProjects.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            Aucun projet trouvé
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
