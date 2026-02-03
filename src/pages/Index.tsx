@@ -20,12 +20,12 @@ const Index = () => {
       <Navigation />
       <Hero />
       <PartnershipBanner />
+      <LatestNews />
       <StatsSection />
       <HowItWorks />
       <ServicesSection />
       <FundingTypes />
       <FeaturedProjects />
-      <LatestNews />
       <TestimonialsSection />
       <Features />
       <CallToAction />

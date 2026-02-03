@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFormProgress } from "@/hooks/useFormProgress";
+import { EvaluationPopup } from "@/components/evaluation/EvaluationPopup";
 import { 
   Upload, ArrowRight, ArrowLeft, CheckCircle, 
   FileText, Target, Users, DollarSign, Send, AlertCircle,
@@ -100,6 +101,18 @@ const steps = [
   { id: 7, title: "Équipe & Documents", icon: Upload },
 ];
 
+const generateAutoEvaluation = (formData: any, projectId: string) => {
+  const scorePorteur = Math.min(100, (formData.fullName ? 20 : 0) + (formData.organization ? 20 : 0) + (formData.phone ? 15 : 0) + (formData.email ? 15 : 0) + 30);
+  const scoreProjet = Math.min(100, (formData.projectTitle ? 25 : 0) + (formData.sector ? 15 : 0) + (formData.executiveSummary?.length > 50 ? 25 : 10) + 25);
+  const scoreFinancier = Math.min(100, (formData.estimatedBudget ? 50 : 0) + (formData.fondsDisponibles ? 30 : 0) + 20);
+  const scoreMaturite = formData.projectStage === "Activité existante à développer" ? 90 : formData.projectStage === "Projet pilote / test" ? 70 : 40;
+  const scoreImpact = Math.min(100, (formData.directBeneficiaries ? 40 : 0) + (formData.expectedImpact?.length > 20 ? 40 : 20) + 20);
+  const scoreEquipe = Math.min(100, (formData.teamDescription?.length > 20 ? 60 : 30) + (formData.availableDocuments?.length > 0 ? 40 : 10));
+  const scoreGlobal = Math.round((scorePorteur + scoreProjet + scoreFinancier + scoreMaturite + scoreImpact + scoreEquipe) / 6);
+  const niveau = scoreGlobal >= 80 ? 'A' : scoreGlobal >= 60 ? 'B' : scoreGlobal >= 40 ? 'C' : 'D';
+  return { score_global: scoreGlobal, score_porteur: scorePorteur, score_projet: scoreProjet, score_financier: scoreFinancier, score_maturite: scoreMaturite, score_impact: scoreImpact, score_equipe: scoreEquipe, niveau, forces: ["Projet soumis avec succès"], faiblesses: [], recommandations: ["Contacter un expert MIPROJET"], resume: `Score automatique: ${scoreGlobal}/100 - Niveau ${niveau}` };
+};
+
 const SubmitProject = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
@@ -108,6 +121,9 @@ const SubmitProject = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [files, setFiles] = useState<File[]>([]);
+  const [showEvaluationPopup, setShowEvaluationPopup] = useState(false);
+  const [evaluationResult, setEvaluationResult] = useState<any>(null);
+  const [submittedProjectId, setSubmittedProjectId] = useState<string>("");
   
   const [formData, setFormData] = useState({
     // Step 1 - Porteur
@@ -299,12 +315,39 @@ const SubmitProject = () => {
         await uploadFiles(data.id);
       }
 
-      toast({
-        title: t('submitProject.success'),
-        description: t('submitProject.successDesc'),
-      });
+      // Generate automatic MIPROJET SCORE evaluation
+      const evaluationData = generateAutoEvaluation(formData, data.id);
+      
+      const { data: evalResult, error: evalError } = await supabase
+        .from('project_evaluations')
+        .insert({
+          project_id: data.id,
+          user_id: user.id,
+          ...evaluationData
+        })
+        .select()
+        .single();
 
-      navigate("/dashboard");
+      if (!evalError && evalResult) {
+        setEvaluationResult(evalResult);
+        setSubmittedProjectId(data.id);
+        setShowEvaluationPopup(true);
+        
+        // Notify user about evaluation
+        await supabase.from('notifications').insert({
+          user_id: user.id,
+          title: "🏆 Évaluation MIPROJET SCORE",
+          message: `Votre projet "${formData.projectTitle}" a obtenu un score de ${evaluationData.score_global}/100 (Niveau ${evaluationData.niveau})`,
+          type: "evaluation",
+          link: `/project-evaluation/${data.id}`
+        });
+      } else {
+        toast({
+          title: t('submitProject.success'),
+          description: t('submitProject.successDesc'),
+        });
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: t('common.error'),

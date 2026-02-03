@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Edit, Trash2, Eye, Archive, Check, X, Search, Newspaper } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
+import { 
+  Plus, Edit, Trash2, Eye, Archive, Check, X, Search, Newspaper,
+  Wand2, Loader2, Bold, Italic, List, Heading1, Heading2, Quote, Link2,
+  Image, Video, Upload
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -39,6 +44,8 @@ export const AdminNewsManager = () => {
   const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [generating, setGenerating] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -56,6 +63,8 @@ export const AdminNewsManager = () => {
     { value: "projects", label: "Projets" },
     { value: "partnerships", label: "Partenariats" },
     { value: "training", label: "Formations" },
+    { value: "opportunities", label: "Opportunités" },
+    { value: "funding", label: "Financement" },
   ];
 
   useEffect(() => {
@@ -79,6 +88,97 @@ export const AdminNewsManager = () => {
       setNews(data);
     }
     setLoading(false);
+  };
+
+  // AI Generation function
+  const generateWithAI = async () => {
+    if (!formData.content || formData.content.length < 50) {
+      toast({ 
+        title: "Contenu insuffisant", 
+        description: "Écrivez au moins 50 caractères de contenu brut pour générer avec l'IA", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    setGenerating(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('miprojet-assistant', {
+        body: {
+          action: 'generate_news',
+          content: formData.content
+        }
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          title: data.title || prev.title,
+          excerpt: data.excerpt || prev.excerpt,
+          content: data.content || prev.content,
+          category: data.category || prev.category
+        }));
+        
+        toast({ 
+          title: "Génération réussie", 
+          description: "Le titre, résumé et contenu ont été générés par l'IA" 
+        });
+      }
+    } catch (error: any) {
+      // Fallback: generate locally
+      const lines = formData.content.split('\n').filter(l => l.trim());
+      const generatedTitle = lines[0]?.substring(0, 80) || "Actualité MIPROJET";
+      const generatedExcerpt = formData.content.substring(0, 200) + "...";
+      
+      // Auto-detect category
+      const contentLower = formData.content.toLowerCase();
+      let detectedCategory = "general";
+      if (contentLower.includes("formation") || contentLower.includes("atelier")) detectedCategory = "training";
+      else if (contentLower.includes("financement") || contentLower.includes("investissement")) detectedCategory = "funding";
+      else if (contentLower.includes("partenariat") || contentLower.includes("accord")) detectedCategory = "partnerships";
+      else if (contentLower.includes("opportunité") || contentLower.includes("appel")) detectedCategory = "opportunities";
+      else if (contentLower.includes("projet")) detectedCategory = "projects";
+      else if (contentLower.includes("événement") || contentLower.includes("conférence")) detectedCategory = "events";
+
+      // Format content with markdown
+      const formattedContent = `## ${generatedTitle}\n\n${formData.content.split('\n\n').map((p, i) => {
+        if (i === 0) return p;
+        if (p.includes(':')) return `### ${p}`;
+        return p;
+      }).join('\n\n')}`;
+      
+      setFormData(prev => ({
+        ...prev,
+        title: generatedTitle,
+        excerpt: generatedExcerpt,
+        content: formattedContent,
+        category: detectedCategory
+      }));
+      
+      toast({ 
+        title: "Génération locale", 
+        description: "Contenu structuré automatiquement" 
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Text formatting helpers
+  const insertFormat = (before: string, after: string = "") => {
+    if (!contentRef.current) return;
+    const textarea = contentRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = formData.content.substring(start, end);
+    const newContent = 
+      formData.content.substring(0, start) + 
+      before + selectedText + after + 
+      formData.content.substring(end);
+    setFormData({ ...formData, content: newContent });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -203,7 +303,7 @@ export const AdminNewsManager = () => {
             <Newspaper className="h-8 w-8" />
             Gestion des Actualités
           </h1>
-          <p className="text-muted-foreground">Gérez les actualités et événements de la plateforme</p>
+          <p className="text-muted-foreground">Créez et gérez les actualités avec l'assistance IA</p>
         </div>
         
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -213,71 +313,56 @@ export const AdminNewsManager = () => {
               Nouvelle actualité
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>
-                {editingNews ? "Modifier l'actualité" : "Nouvelle actualité"}
+              <DialogTitle className="flex items-center gap-2">
+                <Wand2 className="h-5 w-5 text-primary" />
+                {editingNews ? "Modifier l'actualité" : "Nouvelle actualité avec IA"}
               </DialogTitle>
             </DialogHeader>
+            
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Titre *</Label>
-                <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  required
-                />
+              {/* AI Generation Button */}
+              <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                <Wand2 className="h-5 w-5 text-primary" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Génération IA</p>
+                  <p className="text-xs text-muted-foreground">
+                    Écrivez votre contenu brut ci-dessous, puis cliquez sur "Générer" pour structurer automatiquement
+                  </p>
+                </div>
+                <Button 
+                  type="button" 
+                  onClick={generateWithAI}
+                  disabled={generating}
+                  variant="default"
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Générer avec IA
+                    </>
+                  )}
+                </Button>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="excerpt">Résumé</Label>
-                <Textarea
-                  id="excerpt"
-                  value={formData.excerpt}
-                  onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                  rows={2}
-                  placeholder="Court résumé de l'actualité"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="content">Contenu *</Label>
-                <Textarea
-                  id="content"
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  rows={8}
-                  required
-                  placeholder="Contenu complet de l'actualité..."
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="image_url">URL de l'image</Label>
+                  <Label htmlFor="title">Titre *</Label>
                   <Input
-                    id="image_url"
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://..."
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Sera généré automatiquement par l'IA..."
+                    required
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="video_url">URL de la vidéo</Label>
-                  <Input
-                    id="video_url"
-                    type="url"
-                    value={formData.video_url}
-                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                    placeholder="https://youtube.com/..."
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="category">Catégorie</Label>
                   <Select
@@ -296,25 +381,111 @@ export const AdminNewsManager = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                
-                <div className="flex items-center gap-2 pt-6">
-                  <input
-                    type="checkbox"
-                    id="is_featured"
-                    checked={formData.is_featured}
-                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                    className="h-4 w-4"
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="excerpt">Résumé</Label>
+                <Textarea
+                  id="excerpt"
+                  value={formData.excerpt}
+                  onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                  rows={2}
+                  placeholder="Sera généré automatiquement par l'IA..."
+                />
+              </div>
+              
+              {/* Rich Text Editor Toolbar */}
+              <div className="space-y-2">
+                <Label>Contenu *</Label>
+                <div className="flex flex-wrap gap-1 p-2 bg-muted/50 rounded-t-md border border-b-0">
+                  <Toggle size="sm" onClick={() => insertFormat("**", "**")} title="Gras">
+                    <Bold className="h-4 w-4" />
+                  </Toggle>
+                  <Toggle size="sm" onClick={() => insertFormat("*", "*")} title="Italique">
+                    <Italic className="h-4 w-4" />
+                  </Toggle>
+                  <Toggle size="sm" onClick={() => insertFormat("\n## ", "\n")} title="Titre">
+                    <Heading1 className="h-4 w-4" />
+                  </Toggle>
+                  <Toggle size="sm" onClick={() => insertFormat("\n### ", "\n")} title="Sous-titre">
+                    <Heading2 className="h-4 w-4" />
+                  </Toggle>
+                  <Toggle size="sm" onClick={() => insertFormat("\n- ", "")} title="Liste">
+                    <List className="h-4 w-4" />
+                  </Toggle>
+                  <Toggle size="sm" onClick={() => insertFormat("\n> ", "")} title="Citation">
+                    <Quote className="h-4 w-4" />
+                  </Toggle>
+                  <Toggle size="sm" onClick={() => insertFormat("[", "](url)")} title="Lien">
+                    <Link2 className="h-4 w-4" />
+                  </Toggle>
+                </div>
+                <Textarea
+                  ref={contentRef}
+                  id="content"
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  rows={12}
+                  required
+                  placeholder="Écrivez librement votre contenu ici... L'IA le structurera automatiquement avec titres, paragraphes et mise en forme."
+                  className="rounded-t-none font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Supporte le format Markdown. Cliquez sur "Générer avec IA" pour structurer automatiquement.
+                </p>
+              </div>
+              
+              {/* Media Upload */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="image_url" className="flex items-center gap-2">
+                    <Image className="h-4 w-4" />
+                    URL de l'image
+                  </Label>
+                  <Input
+                    id="image_url"
+                    type="url"
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    placeholder="https://..."
                   />
-                  <Label htmlFor="is_featured">Mettre en avant</Label>
+                  {formData.image_url && (
+                    <img src={formData.image_url} alt="Preview" className="w-full h-32 object-cover rounded" />
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="video_url" className="flex items-center gap-2">
+                    <Video className="h-4 w-4" />
+                    URL de la vidéo
+                  </Label>
+                  <Input
+                    id="video_url"
+                    type="url"
+                    value={formData.video_url}
+                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                    placeholder="https://youtube.com/..."
+                  />
                 </div>
               </div>
               
-              <div className="flex justify-end gap-2">
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="is_featured"
+                  checked={formData.is_featured}
+                  onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                  className="h-4 w-4"
+                />
+                <Label htmlFor="is_featured">Mettre en avant sur la page d'accueil</Label>
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={resetForm}>
                   Annuler
                 </Button>
                 <Button type="submit">
-                  {editingNews ? "Modifier" : "Créer"}
+                  {editingNews ? "Modifier" : "Créer l'actualité"}
                 </Button>
               </div>
             </form>
