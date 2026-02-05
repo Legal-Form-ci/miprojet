@@ -361,44 +361,78 @@ export const AdminProjectsTable = () => {
         </CardContent>
       </Card>
 
-      {/* View Dialog */}
+      {/* View Dialog - Enhanced Responsive */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{selectedProject?.title}</DialogTitle>
-            <DialogDescription>Détails du projet</DialogDescription>
+            <DialogTitle className="text-xl md:text-2xl font-bold">{selectedProject?.title}</DialogTitle>
+            <DialogDescription>Détails complets du projet</DialogDescription>
           </DialogHeader>
           {selectedProject && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-muted-foreground">Statut</Label>
-                  <div className="mt-1">{getStatusBadge(selectedProject.status)}</div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Score de risque</Label>
-                  <div className="mt-1">{getRiskBadge(selectedProject.risk_score)}</div>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Catégorie</Label>
-                  <p className="font-medium">{selectedProject.category || 'N/A'}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Localisation</Label>
-                  <p className="font-medium">{selectedProject.city}, {selectedProject.country}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Objectif de financement</Label>
-                  <p className="font-medium">{selectedProject.funding_goal?.toLocaleString()} FCFA</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Fonds disponibles</Label>
-                  <p className="font-medium">{selectedProject.fonds_disponibles || 'N/A'}</p>
+            <div className="space-y-6">
+              {/* Status & Score Section */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-3">Statut & Évaluation</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Statut actuel</Label>
+                    <div className="mt-1">{getStatusBadge(selectedProject.status)}</div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Score de risque</Label>
+                    <div className="mt-1">{getRiskBadge(selectedProject.risk_score)}</div>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Fonds disponibles</Label>
+                    <p className="font-medium text-primary">{selectedProject.fonds_disponibles || 'Non renseigné'}</p>
+                  </div>
                 </div>
               </div>
-              <div>
-                <Label className="text-muted-foreground">Description</Label>
-                <p className="mt-1 text-sm whitespace-pre-wrap">{selectedProject.description}</p>
+
+              {/* Classification Section */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-3">Classification</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Catégorie</Label>
+                    <p className="font-medium">{selectedProject.category || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Secteur</Label>
+                    <p className="font-medium">{selectedProject.sector || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Objectif de financement</Label>
+                    <p className="font-medium text-lg">{selectedProject.funding_goal?.toLocaleString()} FCFA</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Location Section */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-3">Localisation</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Pays</Label>
+                    <p className="font-medium">{selectedProject.country || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Ville</Label>
+                    <p className="font-medium">{selectedProject.city || 'N/A'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description Section */}
+              <div className="bg-muted/50 rounded-lg p-4">
+                <h3 className="font-semibold text-sm uppercase text-muted-foreground mb-3">Description du projet</h3>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedProject.description || 'Aucune description fournie'}</p>
+              </div>
+
+              {/* Metadata */}
+              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground pt-4 border-t">
+                <span>ID: <code className="bg-muted px-1 rounded">{selectedProject.id.slice(0, 8)}...</code></span>
+                <span>Créé le: {new Date(selectedProject.created_at).toLocaleDateString('fr-FR')}</span>
               </div>
             </div>
           )}

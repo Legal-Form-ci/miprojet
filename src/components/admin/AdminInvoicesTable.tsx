@@ -122,9 +122,6 @@ export const AdminInvoicesTable = () => {
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button>
-            Nouvelle facture
-          </Button>
         </div>
       </div>
 

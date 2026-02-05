@@ -153,11 +153,22 @@ const AdminDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <h1 className="text-3xl font-bold">Demandes de Services</h1>
-                  <p className="text-muted-foreground">Gérez les demandes de structuration et d'accompagnement</p>
+                  <p className="text-muted-foreground">Gérez les demandes de structuration, d'accompagnement et d'accès aux projets</p>
                 </div>
               </div>
               
-              <AdminRequestsTable />
+              <Tabs defaultValue="services">
+                <TabsList>
+                  <TabsTrigger value="services">Demandes de services</TabsTrigger>
+                  <TabsTrigger value="access">Demandes d'accès</TabsTrigger>
+                </TabsList>
+                <TabsContent value="services" className="pt-4">
+                  <AdminRequestsTable />
+                </TabsContent>
+                <TabsContent value="access" className="pt-4">
+                  <AdminAccessRequests />
+                </TabsContent>
+              </Tabs>
             </TabsContent>
             
             <TabsContent value="news" className="space-y-6">
@@ -197,10 +208,6 @@ const AdminDashboard = () => {
             
             <TabsContent value="referrals" className="space-y-6">
               <AdminReferralsManager />
-            </TabsContent>
-            
-            <TabsContent value="access-requests" className="space-y-6">
-              <AdminAccessRequests />
             </TabsContent>
             
             <TabsContent value="database" className="space-y-6">
