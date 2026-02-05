@@ -32,7 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Trophy, Search, Eye, Edit, Award, RefreshCw, Download,
-  Plus, Save, Loader2, CheckCircle, X, Calculator
+  Plus, Save, Loader2, CheckCircle, X, Calculator, Trash2, Wand2
 } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -100,6 +100,7 @@ export const AdminEvaluationsManager = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generatingAI, setGeneratingAI] = useState(false);
 
   // Form state for editing/creating
   const [formData, setFormData] = useState({
@@ -296,6 +297,81 @@ export const AdminEvaluationsManager = () => {
     }
   };
 
+  const handleDelete = async (evaluation: Evaluation) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette évaluation ? Cette action est irréversible.")) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_evaluations')
+        .delete()
+        .eq('id', evaluation.id);
+
+      if (error) throw error;
+
+      toast({ title: "Succès", description: "Évaluation supprimée" });
+      fetchData();
+    } catch (error: any) {
+      toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const generateWithAI = async () => {
+    const project = projects.find(p => p.id === formData.project_id);
+    if (!project) {
+      toast({ title: "Erreur", description: "Veuillez d'abord sélectionner un projet", variant: "destructive" });
+      return;
+    }
+
+    setGeneratingAI(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('miprojet-assistant', {
+        body: {
+          action: 'generate_evaluation',
+          projectData: {
+            title: project.title,
+            sector: project.sector,
+            description: ""
+          },
+          scores: {
+            porteur: formData.score_porteur,
+            projet: formData.score_projet,
+            financier: formData.score_financier,
+            maturite: formData.score_maturite,
+            impact: formData.score_impact,
+            equipe: formData.score_equipe
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          resume: data.resume || prev.resume,
+          forces: (data.forces || []).join('\n'),
+          faiblesses: (data.faiblesses || []).join('\n'),
+          recommandations: (data.recommandations || []).join('\n')
+        }));
+        
+        toast({ title: "Génération IA réussie", description: "Résumé et recommandations générés" });
+      }
+    } catch (error: any) {
+      // Fallback local
+      setFormData(prev => ({
+        ...prev,
+        resume: `Projet évalué avec un score global de ${calculateGlobalScore()}/100. Ce projet présente un potentiel intéressant nécessitant une structuration approfondie.`,
+        forces: "Idée innovante\nMarché porteur\nÉquipe motivée",
+        faiblesses: "Business plan à compléter\nProjections financières à affiner",
+        recommandations: "Structurer le business plan selon ISO 21500\nDétailler le plan financier sur 5 ans\nIdentifier les partenaires stratégiques"
+      }));
+      toast({ title: "Génération locale", description: "Contenu généré localement" });
+    } finally {
+      setGeneratingAI(false);
+    }
+  };
+
   const resetForm = () => {
     setFormData({
       project_id: "",
@@ -455,6 +531,7 @@ export const AdminEvaluationsManager = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => { setSelectedEvaluation(evaluation); setShowViewDialog(true); }}
+                          title="Voir"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -462,8 +539,18 @@ export const AdminEvaluationsManager = () => {
                           variant="ghost"
                           size="icon"
                           onClick={() => openEditDialog(evaluation)}
+                          title="Modifier"
                         >
                           <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(evaluation)}
+                          title="Supprimer"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -572,8 +659,38 @@ export const AdminEvaluationsManager = () => {
               />
             </div>
 
-            {/* Text Fields */}
+            {/* Text Fields with AI Generation */}
             <div className="space-y-4">
+              {/* AI Generation Button */}
+              <div className="flex items-center gap-2 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg border border-primary/20">
+                <Wand2 className="h-5 w-5 text-primary" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Génération IA</p>
+                  <p className="text-xs text-muted-foreground">
+                    Générer automatiquement le résumé et les recommandations
+                  </p>
+                </div>
+                <Button 
+                  type="button" 
+                  onClick={generateWithAI}
+                  disabled={generatingAI || !formData.project_id}
+                  variant="default"
+                  size="sm"
+                >
+                  {generatingAI ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Génération...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="h-4 w-4 mr-2" />
+                      Générer avec IA
+                    </>
+                  )}
+                </Button>
+              </div>
+
               <div className="space-y-2">
                 <Label>Résumé de l'évaluation</Label>
                 <Textarea

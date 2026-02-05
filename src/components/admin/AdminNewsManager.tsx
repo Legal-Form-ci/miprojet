@@ -438,34 +438,97 @@ export const AdminNewsManager = () => {
               {/* Media Upload */}
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="image_url" className="flex items-center gap-2">
+                  <Label htmlFor="image_upload" className="flex items-center gap-2">
                     <Image className="h-4 w-4" />
-                    URL de l'image
+                    Image (max 20 Mo)
                   </Label>
-                  <Input
-                    id="image_url"
-                    type="url"
-                    value={formData.image_url}
-                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                    placeholder="https://..."
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      id="image_upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 20 * 1024 * 1024) {
+                            toast({ title: "Erreur", description: "L'image ne doit pas dépasser 20 Mo", variant: "destructive" });
+                            return;
+                          }
+                          // Upload to Supabase Storage
+                          const fileName = `news/${Date.now()}_${file.name}`;
+                          const { data, error } = await supabase.storage
+                            .from('news-media')
+                            .upload(fileName, file);
+                          
+                          if (error) {
+                            // If bucket doesn't exist, use URL input fallback
+                            toast({ title: "Info", description: "Utilisez une URL d'image externe", variant: "default" });
+                          } else {
+                            const { data: urlData } = supabase.storage.from('news-media').getPublicUrl(fileName);
+                            setFormData({ ...formData, image_url: urlData.publicUrl });
+                            toast({ title: "Succès", description: "Image téléchargée" });
+                          }
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                    <Input
+                      type="url"
+                      value={formData.image_url}
+                      onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                      placeholder="Ou entrez l'URL de l'image..."
+                    />
+                  </div>
                   {formData.image_url && (
                     <img src={formData.image_url} alt="Preview" className="w-full h-32 object-cover rounded" />
                   )}
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="video_url" className="flex items-center gap-2">
+                  <Label htmlFor="video_upload" className="flex items-center gap-2">
                     <Video className="h-4 w-4" />
-                    URL de la vidéo
+                    Vidéo (max 500 Mo)
                   </Label>
-                  <Input
-                    id="video_url"
-                    type="url"
-                    value={formData.video_url}
-                    onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
-                    placeholder="https://youtube.com/..."
-                  />
+                  <div className="space-y-2">
+                    <Input
+                      id="video_upload"
+                      type="file"
+                      accept="video/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          if (file.size > 500 * 1024 * 1024) {
+                            toast({ title: "Erreur", description: "La vidéo ne doit pas dépasser 500 Mo", variant: "destructive" });
+                            return;
+                          }
+                          const fileName = `news/${Date.now()}_${file.name}`;
+                          const { data, error } = await supabase.storage
+                            .from('news-media')
+                            .upload(fileName, file);
+                          
+                          if (error) {
+                            toast({ title: "Info", description: "Utilisez une URL vidéo externe (YouTube, etc.)", variant: "default" });
+                          } else {
+                            const { data: urlData } = supabase.storage.from('news-media').getPublicUrl(fileName);
+                            setFormData({ ...formData, video_url: urlData.publicUrl });
+                            toast({ title: "Succès", description: "Vidéo téléchargée" });
+                          }
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                    <Input
+                      type="url"
+                      value={formData.video_url}
+                      onChange={(e) => setFormData({ ...formData, video_url: e.target.value })}
+                      placeholder="Ou entrez l'URL YouTube/Vimeo..."
+                    />
+                  </div>
+                  {formData.video_url && (
+                    <div className="text-sm text-muted-foreground bg-muted p-2 rounded truncate">
+                      📹 {formData.video_url}
+                    </div>
+                  )}
                 </div>
               </div>
               
