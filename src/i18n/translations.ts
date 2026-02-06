@@ -356,9 +356,19 @@ export const translations: Record<Language, Record<string, string>> = {
     'common.readMore': 'Lire la suite',
     
     // News
+    'news.pageTitle': 'Actualités',
+    'news.pageSubtitle': 'Restez informé des dernières nouvelles et événements de MIPROJET',
     'news.latestTitle': 'Dernières Actualités',
     'news.latestSubtitle': 'Restez informé des dernières nouvelles et opportunités',
     'news.viewAll': 'Voir toutes les actualités',
+    'news.allCategories': 'Toutes les catégories',
+    'news.categoryGeneral': 'Général',
+    'news.categoryEvents': 'Événements',
+    'news.categoryProjects': 'Projets',
+    'news.categoryPartnerships': 'Partenariats',
+    'news.categoryTraining': 'Formations',
+    'news.searchPlaceholder': 'Rechercher...',
+    'news.noNews': 'Aucune actualité disponible pour le moment',
     
     // Footer
     'footer.description': 'Plateforme panafricaine spécialisée dans la structuration professionnelle et l\'accompagnement de projets à fort impact en Afrique.',
