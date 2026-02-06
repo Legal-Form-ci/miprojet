@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Eye, Search, ArrowRight, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Calendar, Eye, Search, ArrowRight, Clock, ArrowLeft, X, ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { fr, enUS, ar, zhCN, es, de } from "date-fns/locale";
 
 interface NewsItem {
@@ -27,7 +27,10 @@ interface NewsItem {
 
 const News = () => {
   const { t, language } = useLanguage();
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [news, setNews] = useState<NewsItem[]>([]);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -52,10 +55,28 @@ const News = () => {
     { value: "training", label: t('news.categoryTraining') || "Formations" },
   ];
 
+  const defaultImages = [
+    "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&h=500&fit=crop",
+    "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=500&fit=crop",
+    "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=500&fit=crop"
+  ];
+
   useEffect(() => {
-    document.title = `${t('news.pageTitle') || 'Actualités'} | MIPROJET`;
+    document.title = `${t('news.pageTitle')} | MIPROJET`;
     fetchNews();
   }, []);
+
+  useEffect(() => {
+    // If there's an ID in URL, load that specific news
+    if (id && news.length > 0) {
+      const found = news.find(n => n.id === id);
+      if (found) {
+        setSelectedNews(found);
+        // Increment view count
+        supabase.from('news').update({ views_count: (found.views_count || 0) + 1 }).eq('id', id);
+      }
+    }
+  }, [id, news]);
 
   const fetchNews = async () => {
     setLoading(true);
@@ -79,25 +100,63 @@ const News = () => {
     return matchesSearch && matchesCategory;
   });
 
+  const openNewsDetail = (item: NewsItem) => {
+    setSelectedNews(item);
+    navigate(`/news/${item.id}`);
+    // Increment view count
+    supabase.from('news').update({ views_count: (item.views_count || 0) + 1 }).eq('id', item.id);
+  };
+
+  const closeNewsDetail = () => {
+    setSelectedNews(null);
+    navigate('/news');
+  };
+
+  // Render content - convert simple formatting to styled text
+  const renderContent = (content: string) => {
+    // If content contains HTML tags, render as HTML
+    if (content.includes('<p>') || content.includes('<h2>') || content.includes('<strong>')) {
+      return (
+        <div 
+          className="prose prose-lg max-w-none prose-headings:text-foreground prose-p:text-muted-foreground prose-strong:text-foreground prose-li:text-muted-foreground"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      );
+    }
+    
+    // Otherwise render as plain paragraphs
+    return (
+      <div className="space-y-4 text-muted-foreground leading-relaxed">
+        {content.split('\n\n').map((paragraph, i) => (
+          <p key={i}>{paragraph}</p>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navigation />
       
       <main className="flex-1 pt-20">
         {/* Header */}
-        <section className="bg-primary py-16 text-primary-foreground">
-          <div className="container mx-auto px-4 text-center">
+        <section className="bg-gradient-to-r from-primary via-primary to-primary/90 py-16 text-primary-foreground relative overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute top-0 left-0 w-32 h-32 bg-secondary/20 rounded-full -translate-x-1/2 -translate-y-1/2" />
+          <div className="absolute bottom-0 right-0 w-48 h-48 bg-secondary/10 rounded-full translate-x-1/4 translate-y-1/4" />
+          
+          <div className="container mx-auto px-4 text-center relative z-10">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-              {t('news.pageTitle') || 'Actualités'}
+              {t('news.pageTitle')}
             </h1>
             <p className="text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto">
-              {t('news.pageSubtitle') || 'Restez informé des dernières nouvelles et événements de MIPROJET'}
+              {t('news.pageSubtitle')}
             </p>
           </div>
         </section>
 
         {/* Filters */}
-        <section className="py-8 border-b border-border">
+        <section className="py-8 border-b border-border bg-card">
           <div className="container mx-auto px-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="relative flex-1">
@@ -139,57 +198,156 @@ const News = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredNews.map((item, index) => (
-                  <Card key={item.id} className={`overflow-hidden hover-lift ${index === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}>
-                    {item.image_url && (
-                      <div className="aspect-video overflow-hidden">
-                        <img
-                          src={item.image_url}
-                          alt={item.title}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                        />
-                      </div>
-                    )}
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {categories.find(c => c.value === item.category)?.label || item.category}
-                        </Badge>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Eye className="h-3 w-3" />
-                          {item.views_count}
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {filteredNews.map((item, index) => {
+                  const imageUrl = item.image_url || defaultImages[index % defaultImages.length];
+                  
+                  return (
+                    <article 
+                      key={item.id} 
+                      onClick={() => openNewsDetail(item)}
+                      className="group relative bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-2 border border-border"
+                    >
+                      {/* Gradient Accent */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" />
+                      
+                      {/* Top accent - Blue */}
+                      <div className="absolute top-0 left-0 w-2/3 h-1 bg-gradient-to-r from-primary to-primary/50 z-20" />
+                      
+                      {/* Bottom accent - Green */}
+                      <div className="absolute bottom-0 right-0 w-2/3 h-1 bg-gradient-to-l from-secondary to-secondary/50 z-20" />
+                      
+                      {/* Image */}
+                      <div className="aspect-video overflow-hidden relative">
+                        {imageUrl ? (
+                          <img
+                            src={imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = defaultImages[index % defaultImages.length];
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-muted flex items-center justify-center">
+                            <ImageOff className="h-12 w-12 text-muted-foreground/40" />
+                          </div>
+                        )}
+                        
+                        {/* Category & Views overlay */}
+                        <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                          <Badge className="bg-primary text-primary-foreground shadow-lg">
+                            {categories.find(c => c.value === item.category)?.label || item.category}
+                          </Badge>
+                          <div className="flex items-center gap-1 text-xs bg-black/50 text-white px-2 py-1 rounded-full">
+                            <Eye className="h-3 w-3" />
+                            {item.views_count}
+                          </div>
                         </div>
                       </div>
-                      <h3 className="text-lg font-semibold line-clamp-2">{item.title}</h3>
-                    </CardHeader>
-                    <CardContent className="pb-2">
-                      <p className="text-sm text-muted-foreground line-clamp-3">
-                        {item.excerpt || item.content.substring(0, 150)}...
-                      </p>
-                    </CardContent>
-                    <CardFooter className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {item.published_at && formatDistanceToNow(new Date(item.published_at), {
-                          addSuffix: true,
-                          locale: getLocale(),
-                        })}
+                      
+                      {/* Content */}
+                      <div className="p-6">
+                        <h3 className="font-bold text-xl text-foreground line-clamp-2 mb-3 group-hover:text-primary transition-colors">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                          {item.excerpt || item.content.substring(0, 150)}...
+                        </p>
+                        
+                        {/* Footer */}
+                        <div className="flex items-center justify-between pt-4 border-t border-border">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Clock className="h-3.5 w-3.5" />
+                            {item.published_at && formatDistanceToNow(new Date(item.published_at), {
+                              addSuffix: true,
+                              locale: getLocale(),
+                            })}
+                          </div>
+                          <span className="text-primary text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                            {t('common.readMore') || 'Lire'}
+                            <ArrowRight className="h-4 w-4" />
+                          </span>
+                        </div>
                       </div>
-                      <Link to={`/news/${item.id}`}>
-                        <Button variant="ghost" size="sm">
-                          {t('common.readMore') || 'Lire la suite'}
-                          <ArrowRight className="ml-1 h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </CardFooter>
-                  </Card>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
             )}
           </div>
         </section>
       </main>
+
+      {/* News Detail Modal */}
+      <Dialog open={!!selectedNews} onOpenChange={(open) => !open && closeNewsDetail()}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0">
+          {selectedNews && (
+            <>
+              {/* Header Image */}
+              <div className="relative aspect-video w-full">
+                <img
+                  src={selectedNews.image_url || defaultImages[0]}
+                  alt={selectedNews.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = defaultImages[0];
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                
+                {/* Close button */}
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 text-white"
+                  onClick={closeNewsDetail}
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+                
+                {/* Title overlay */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <Badge className="bg-primary text-primary-foreground mb-3">
+                    {categories.find(c => c.value === selectedNews.category)?.label || selectedNews.category}
+                  </Badge>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white">
+                    {selectedNews.title}
+                  </h2>
+                </div>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6 md:p-8">
+                {/* Meta */}
+                <div className="flex flex-wrap items-center gap-4 mb-6 pb-4 border-b border-border text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {selectedNews.published_at && format(new Date(selectedNews.published_at), 'PPP', { locale: getLocale() })}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    {selectedNews.views_count} vues
+                  </div>
+                </div>
+                
+                {/* Article content */}
+                {renderContent(selectedNews.content)}
+                
+                {/* Back button */}
+                <div className="mt-8 pt-6 border-t border-border">
+                  <Button variant="outline" onClick={closeNewsDetail}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Retour aux actualités
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

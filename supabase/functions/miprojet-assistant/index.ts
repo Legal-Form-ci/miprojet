@@ -59,10 +59,9 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Handle different actions
     const action = body.action;
     
-    // News generation action
+    // News generation action - NO HTML TAGS, direct rich text formatting
     if (action === 'generate_news') {
       const content = body.content || "";
       
@@ -77,29 +76,50 @@ serve(async (req) => {
           messages: [
             { 
               role: "system", 
-              content: `Tu es un rédacteur web professionnel pour MIPROJET, une plateforme panafricaine de structuration de projets.
-              
-Tu dois transformer le contenu brut fourni en un article professionnel et structuré.
+              content: `Tu es un rédacteur web professionnel pour MIPROJET.
 
-RÈGLES IMPORTANTES:
-- Génère un titre accrocheur et pertinent (max 80 caractères)
-- Génère un résumé concis (150-200 caractères) 
-- Structure le contenu avec des paragraphes clairs
-- Utilise des sous-titres en HTML (<h2>, <h3>) pour organiser
-- Ajoute des emojis pertinents pour dynamiser le texte
-- Mets les points importants en gras avec <strong>
-- Crée des listes à puces <ul><li> si nécessaire
-- Garde un ton professionnel mais accessible
-- N'utilise JAMAIS de symboles markdown (###, **, etc.)
-- Utilise UNIQUEMENT du HTML pour le formatage
+MISSION: Transformer le contenu brut en article professionnel bien structuré.
 
-CATÉGORIES DISPONIBLES: general, events, projects, partnerships, training, opportunities, funding
+RÈGLES CRITIQUES - FORMAT DE SORTIE:
+1. NE JAMAIS utiliser de balises HTML (<p>, <h2>, <strong>, etc.)
+2. NE JAMAIS utiliser de symboles Markdown (###, **, *, etc.)
+3. Utiliser du TEXTE BRUT avec structure claire
 
-Réponds en JSON avec cette structure exacte:
+FORMAT À UTILISER:
+- Titre principal en MAJUSCULES sur une ligne
+- Sous-titres avec emoji au début (🎯, 💡, 📊, etc.)
+- Paragraphes séparés par deux sauts de ligne
+- Points importants simplement écrits avec clarté
+- Listes avec tirets simples (-)
+
+EXEMPLE DE FORMAT CORRECT:
+TITRE DE L'ARTICLE EN MAJUSCULES
+
+Introduction du sujet avec contexte général. Premier paragraphe qui accroche le lecteur et présente le sujet.
+
+🎯 Premier sous-titre
+
+Développement du premier point. Explication claire et concise avec des informations pertinentes.
+
+💡 Deuxième sous-titre
+
+Autre section avec contenu structuré. Les points clés sont mis en valeur par leur position et formulation.
+
+- Premier point de liste
+- Deuxième point
+- Troisième point
+
+📊 Conclusion
+
+Synthèse et appel à l'action final.
+
+CATÉGORIES: general, events, projects, partnerships, training, opportunities, funding
+
+Réponds en JSON:
 {
-  "title": "Titre de l'article",
-  "excerpt": "Résumé court de l'article",
-  "content": "Contenu HTML structuré et formaté",
+  "title": "Titre accrocheur (max 80 caractères)",
+  "excerpt": "Résumé court (150-200 caractères)",
+  "content": "Contenu formaté selon les règles ci-dessus",
   "category": "catégorie_appropriée"
 }`
             },
@@ -116,30 +136,38 @@ Réponds en JSON avec cette structure exacte:
       const aiData = await response.json();
       const aiContent = aiData.choices?.[0]?.message?.content || "";
       
-      // Parse JSON from AI response
       try {
         const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
+          // Clean any remaining HTML/Markdown
+          if (parsed.content) {
+            parsed.content = parsed.content
+              .replace(/<[^>]*>/g, '')
+              .replace(/#{1,6}\s*/g, '')
+              .replace(/\*\*/g, '')
+              .replace(/\*/g, '');
+          }
           return new Response(JSON.stringify(parsed), {
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
       } catch (e) {
-        // Fallback: extract manually
-        const lines = content.split('\n').filter((l: string) => l.trim());
-        const title = lines[0]?.substring(0, 80) || "Actualité MIPROJET";
-        const excerpt = content.substring(0, 200) + "...";
-        
-        return new Response(JSON.stringify({
-          title,
-          excerpt,
-          content: `<h2>${title}</h2>\n\n<p>${content.replace(/\n\n/g, '</p>\n\n<p>')}</p>`,
-          category: "general"
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+        console.error("Parse error:", e);
       }
+      
+      // Fallback
+      const lines = content.split('\n').filter((l: string) => l.trim());
+      const title = lines[0]?.substring(0, 80) || "Actualité MIPROJET";
+      
+      return new Response(JSON.stringify({
+        title,
+        excerpt: content.substring(0, 200) + "...",
+        content: content,
+        category: "general"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     // Evaluation AI generation
@@ -158,19 +186,33 @@ Réponds en JSON avec cette structure exacte:
           messages: [
             { 
               role: "system", 
-              content: `Tu es un expert en évaluation de projets pour MIPROJET. Génère une évaluation professionnelle basée sur les scores et données du projet.
-              
-Réponds en JSON avec cette structure:
+              content: `Tu es un expert en évaluation de projets pour MIPROJET.
+
+Génère une évaluation professionnelle et constructive basée sur les données du projet.
+
+Réponds UNIQUEMENT en JSON valide:
 {
-  "resume": "Résumé exécutif du projet (2-3 phrases)",
+  "resume": "Résumé exécutif professionnel du projet (2-3 phrases)",
   "forces": ["Point fort 1", "Point fort 2", "Point fort 3"],
-  "faiblesses": ["Point faible 1", "Point faible 2"],
-  "recommandations": ["Recommandation 1", "Recommandation 2", "Recommandation 3"]
+  "faiblesses": ["Point à améliorer 1", "Point à améliorer 2"],
+  "recommandations": ["Recommandation stratégique 1", "Recommandation 2", "Recommandation 3"]
 }`
             },
             { 
               role: "user", 
-              content: `Évalue ce projet:\nTitre: ${projectData.title}\nSecteur: ${projectData.sector}\nDescription: ${projectData.description}\n\nScores:\n- Porteur: ${scores.porteur}/100\n- Projet: ${scores.projet}/100\n- Financier: ${scores.financier}/100\n- Maturité: ${scores.maturite}/100\n- Impact: ${scores.impact}/100\n- Équipe: ${scores.equipe}/100`
+              content: `Évalue ce projet de manière professionnelle:
+
+Projet: ${projectData.title || "Non spécifié"}
+Secteur: ${projectData.sector || "Non spécifié"}
+Description: ${projectData.description || "Non fournie"}
+
+Scores attribués:
+- Porteur de projet: ${scores.porteur || 0}/100
+- Qualité du projet: ${scores.projet || 0}/100
+- Viabilité financière: ${scores.financier || 0}/100
+- Niveau de maturité: ${scores.maturite || 0}/100
+- Impact potentiel: ${scores.impact || 0}/100
+- Qualité de l'équipe: ${scores.equipe || 0}/100`
             }
           ],
           max_tokens: 1000,
@@ -193,15 +235,17 @@ Réponds en JSON avec cette structure:
           });
         }
       } catch (e) {
-        return new Response(JSON.stringify({
-          resume: "Projet en cours d'évaluation par les experts MIPROJET.",
-          forces: ["Idée prometteuse", "Marché porteur"],
-          faiblesses: ["Nécessite une structuration approfondie"],
-          recommandations: ["Compléter le business plan", "Affiner les projections financières"]
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" }
-        });
+        console.error("Evaluation parse error:", e);
       }
+      
+      return new Response(JSON.stringify({
+        resume: "Projet en cours d'évaluation par les experts MIPROJET. Une analyse approfondie sera fournie prochainement.",
+        forces: ["Idée innovante à fort potentiel", "Secteur porteur", "Engagement du porteur"],
+        faiblesses: ["Documentation à compléter", "Projections financières à affiner"],
+        recommandations: ["Finaliser le business plan détaillé", "Affiner les projections sur 3 ans", "Identifier des partenaires stratégiques"]
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     // Default: Chat assistant

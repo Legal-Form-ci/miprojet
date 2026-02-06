@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Calendar, Newspaper } from "lucide-react";
+import { ArrowRight, Calendar, Newspaper, ImageOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { formatDistanceToNow } from "date-fns";
@@ -13,6 +12,7 @@ interface NewsItem {
   id: string;
   title: string;
   excerpt: string | null;
+  content: string;
   image_url: string | null;
   category: string;
   published_at: string | null;
@@ -20,6 +20,7 @@ interface NewsItem {
 
 export const LatestNews = () => {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +39,7 @@ export const LatestNews = () => {
     const fetchLatestNews = async () => {
       const { data, error } = await supabase
         .from('news')
-        .select('id, title, excerpt, image_url, category, published_at')
+        .select('id, title, excerpt, content, image_url, category, published_at')
         .eq('status', 'published')
         .order('published_at', { ascending: false })
         .limit(3);
@@ -51,6 +52,10 @@ export const LatestNews = () => {
 
     fetchLatestNews();
   }, []);
+
+  const handleNewsClick = (id: string) => {
+    navigate(`/news/${id}`);
+  };
 
   if (loading) {
     return (
@@ -65,76 +70,115 @@ export const LatestNews = () => {
   }
 
   if (news.length === 0) {
-    return null; // Don't show section if no news
+    return null;
   }
+
+  // Default placeholder images for news without images
+  const defaultImages = [
+    "https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop",
+    "https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600&h=400&fit=crop"
+  ];
 
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-10 gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <Newspaper className="h-6 w-6 text-primary" />
+            <div className="p-3 bg-primary/10 rounded-xl">
+              <Newspaper className="h-7 w-7 text-primary" />
             </div>
             <div>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground">
-                {t('news.latestTitle') || 'Dernières Actualités'}
+                {t('news.latestTitle')}
               </h2>
               <p className="text-muted-foreground">
-                {t('news.latestSubtitle') || 'Restez informé des dernières nouvelles'}
+                {t('news.latestSubtitle')}
               </p>
             </div>
           </div>
           <Link to="/news">
-            <Button variant="outline">
-              {t('news.viewAll') || 'Voir toutes les actualités'}
-              <ArrowRight className="ml-2 h-4 w-4" />
+            <Button variant="outline" className="group">
+              {t('news.viewAll')}
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
         </div>
 
-        {/* News Cards */}
+        {/* News Cards - Modern Design with Blue/Green gradient accents */}
         <div className="grid md:grid-cols-3 gap-6">
-          {news.map((item) => (
-            <Card key={item.id} className="overflow-hidden hover-lift bg-card">
-              {item.image_url && (
-                <div className="aspect-video overflow-hidden">
-                  <img
-                    src={item.image_url}
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                  />
+          {news.map((item, index) => {
+            const imageUrl = item.image_url || defaultImages[index % defaultImages.length];
+            const excerpt = item.excerpt || item.content?.substring(0, 120) + '...';
+            
+            return (
+              <article 
+                key={item.id} 
+                onClick={() => handleNewsClick(item.id)}
+                className="group relative bg-card rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer hover:-translate-y-2"
+              >
+                {/* Gradient Accent - Blue top-left, Green bottom-right */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-transparent to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10" />
+                
+                {/* Top accent bar - Blue */}
+                <div className="absolute top-0 left-0 w-1/2 h-1 bg-primary z-20" />
+                
+                {/* Bottom accent bar - Green */}
+                <div className="absolute bottom-0 right-0 w-1/2 h-1 bg-secondary z-20" />
+                
+                {/* Image */}
+                <div className="aspect-video overflow-hidden relative">
+                  {imageUrl ? (
+                    <img
+                      src={imageUrl}
+                      alt={item.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = defaultImages[index % defaultImages.length];
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted flex items-center justify-center">
+                      <ImageOff className="h-12 w-12 text-muted-foreground/40" />
+                    </div>
+                  )}
+                  {/* Category Badge */}
+                  <Badge 
+                    className="absolute top-4 left-4 bg-primary text-primary-foreground shadow-lg"
+                  >
+                    {item.category}
+                  </Badge>
                 </div>
-              )}
-              <CardHeader className="pb-2">
-                <Badge variant="secondary" className="w-fit text-xs mb-2">
-                  {item.category}
-                </Badge>
-                <h3 className="font-semibold line-clamp-2 text-foreground">{item.title}</h3>
-              </CardHeader>
-              <CardContent className="pb-2">
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {item.excerpt || ''}
-                </p>
-              </CardContent>
-              <CardFooter className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3" />
-                  {item.published_at && formatDistanceToNow(new Date(item.published_at), {
-                    addSuffix: true,
-                    locale: getLocale(),
-                  })}
+                
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="font-bold text-lg text-foreground line-clamp-2 mb-3 group-hover:text-primary transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
+                    {excerpt}
+                  </p>
+                  
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {item.published_at && formatDistanceToNow(new Date(item.published_at), {
+                        addSuffix: true,
+                        locale: getLocale(),
+                      })}
+                    </div>
+                    <span className="text-primary text-sm font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                      {t('common.readMore')}
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
                 </div>
-                <Link to={`/news/${item.id}`}>
-                  <Button variant="ghost" size="sm" className="text-primary">
-                    {t('common.readMore') || 'Lire'}
-                    <ArrowRight className="ml-1 h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardFooter>
-            </Card>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>
