@@ -248,6 +248,121 @@ Scores attribués:
       });
     }
 
+    // Universal content generation for the advanced AI editor
+    if (action === 'generate_universal_content') {
+      const content = body.content || "";
+      const fields = body.fields || [];
+      
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { 
+              role: "system", 
+              content: `Tu es un expert en rédaction de contenu professionnel pour MIPROJET.
+
+MISSION: Analyser le texte brut fourni et générer un contenu structuré, professionnel et engageant.
+
+RÈGLES CRITIQUES - FORMAT DE SORTIE:
+1. NE JAMAIS utiliser de balises HTML
+2. NE JAMAIS utiliser de symboles Markdown (###, **, *, etc.)
+3. Utiliser du TEXTE BRUT avec structure claire
+
+FORMAT À UTILISER:
+- Titre principal en MAJUSCULES sur une ligne (max 80 caractères)
+- Emojis pour les sous-titres (🎯, 💡, 📊, 🚀, ✅, 📌, 🔹, etc.)
+- Paragraphes séparés par deux sauts de ligne
+- Listes avec tirets simples (-)
+- Hashtags pertinents à la fin (#MIPROJET #Entrepreneuriat...)
+
+STRUCTURE TYPE:
+🚀 TITRE PRINCIPAL EN MAJUSCULES
+
+Introduction accrocheuse qui présente le sujet de manière engageante.
+
+📌 PREMIÈRE SECTION
+
+Développement du premier point avec informations clés.
+
+💡 DEUXIÈME SECTION
+
+Contenu structuré et informatif.
+
+- Point clé 1
+- Point clé 2
+- Point clé 3
+
+🎯 CONCLUSION
+
+Synthèse et appel à l'action.
+
+#MIPROJET #Entrepreneuriat #Afrique
+
+CATÉGORIES DISPONIBLES: general, events, projects, partnerships, training, opportunities, funding
+
+Génère le JSON avec les champs demandés.`
+            },
+            { 
+              role: "user", 
+              content: `Transforme ce contenu brut en article professionnel. Génère UNIQUEMENT un JSON valide avec ces champs:
+{
+  "title": "Titre accrocheur court (max 80 caractères)",
+  "excerpt": "Résumé court (150-200 caractères)",
+  "content": "Contenu formaté avec emojis, sections, paragraphes clairs",
+  "category": "catégorie_appropriée"
+}
+
+Contenu brut à transformer:
+${content}`
+            }
+          ],
+          max_tokens: 2500,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("AI universal generation failed");
+      }
+
+      const aiData = await response.json();
+      const aiContent = aiData.choices?.[0]?.message?.content || "";
+      
+      try {
+        const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          // Clean any remaining HTML/Markdown
+          if (parsed.content) {
+            parsed.content = parsed.content
+              .replace(/<[^>]*>/g, '')
+              .replace(/#{1,6}\s*/g, '')
+              .replace(/\*\*/g, '')
+              .replace(/\*/g, '');
+          }
+          return new Response(JSON.stringify(parsed), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      } catch (e) {
+        console.error("Universal content parse error:", e);
+      }
+      
+      // Fallback
+      return new Response(JSON.stringify({
+        title: content.split('\n')[0]?.substring(0, 80) || "Contenu MIPROJET",
+        excerpt: content.substring(0, 200) + "...",
+        content: content,
+        category: "general"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
     // Default: Chat assistant
     const messages = body.messages || [];
     if (!Array.isArray(messages)) {
