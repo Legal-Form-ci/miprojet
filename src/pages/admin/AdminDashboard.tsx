@@ -29,6 +29,7 @@ import { AdminDatabaseManager } from "@/components/admin/AdminDatabaseManager";
 import { AdminEvaluationsManager } from "@/components/admin/AdminEvaluationsManager";
 import { SmartInvoiceGenerator } from "@/components/admin/SmartInvoiceGenerator";
 import { AdminReferralsManager } from "@/components/admin/AdminReferralsManager";
+import { AdminSettingsManager } from "@/components/admin/AdminSettingsManager";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, adminChecked, signOut } = useAuth();
@@ -138,14 +139,6 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="users" className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold">Gestion des Utilisateurs</h1>
-                  <p className="text-muted-foreground">Gérez les membres et les rôles</p>
-                </div>
-                <Button>Ajouter un utilisateur</Button>
-              </div>
-              
               <AdminUsersTable />
             </TabsContent>
             
@@ -215,19 +208,7 @@ const AdminDashboard = () => {
             </TabsContent>
             
             <TabsContent value="settings" className="space-y-6">
-              <div>
-                <h1 className="text-3xl font-bold">Paramètres</h1>
-                <p className="text-muted-foreground">Configuration de la plateforme</p>
-              </div>
-              
-              <Card>
-                <CardHeader>
-                  <CardTitle>Paramètres généraux</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">Configuration à venir...</p>
-                </CardContent>
-              </Card>
+              <AdminSettingsManager />
             </TabsContent>
           </Tabs>
         </main>
