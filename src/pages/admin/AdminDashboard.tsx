@@ -30,6 +30,8 @@ import { AdminEvaluationsManager } from "@/components/admin/AdminEvaluationsMana
 import { SmartInvoiceGenerator } from "@/components/admin/SmartInvoiceGenerator";
 import { AdminReferralsManager } from "@/components/admin/AdminReferralsManager";
 import { AdminSettingsManager } from "@/components/admin/AdminSettingsManager";
+import { AdminOpportunitiesManager } from "@/components/admin/AdminOpportunitiesManager";
+import { AdminSubscriptionsManager } from "@/components/admin/AdminSubscriptionsManager";
 
 const AdminDashboard = () => {
   const { user, isAdmin, loading, adminChecked, signOut } = useAuth();
@@ -197,6 +199,14 @@ const AdminDashboard = () => {
             
             <TabsContent value="evaluations" className="space-y-6">
               <AdminEvaluationsManager />
+            </TabsContent>
+            
+            <TabsContent value="opportunities" className="space-y-6">
+              <AdminOpportunitiesManager />
+            </TabsContent>
+            
+            <TabsContent value="subscriptions" className="space-y-6">
+              <AdminSubscriptionsManager />
             </TabsContent>
             
             <TabsContent value="referrals" className="space-y-6">

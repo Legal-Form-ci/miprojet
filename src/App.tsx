@@ -35,6 +35,10 @@ const StructuringService = lazy(() => import("./pages/services/StructuringServic
 const EnterpriseService = lazy(() => import("./pages/services/EnterpriseService"));
 const PaymentCallback = lazy(() => import("./pages/PaymentCallback"));
 const ProjectEvaluation = lazy(() => import("./pages/ProjectEvaluation"));
+const Subscription = lazy(() => import("./pages/Subscription"));
+const SubscriptionCheckout = lazy(() => import("./pages/SubscriptionCheckout"));
+const Opportunities = lazy(() => import("./pages/Opportunities"));
+const OpportunityDetail = lazy(() => import("./pages/OpportunityDetail"));
 
 const queryClient = new QueryClient();
 
@@ -100,6 +104,28 @@ const App = () => (
             <Route path="/project-evaluation/:projectId" element={
               <Suspense fallback={<PageLoader />}>
                 <ProjectEvaluation />
+              </Suspense>
+            } />
+            
+            {/* Subscription & Opportunities */}
+            <Route path="/subscription" element={
+              <Suspense fallback={<PageLoader />}>
+                <Subscription />
+              </Suspense>
+            } />
+            <Route path="/subscription/checkout" element={
+              <Suspense fallback={<PageLoader />}>
+                <SubscriptionCheckout />
+              </Suspense>
+            } />
+            <Route path="/opportunities" element={
+              <Suspense fallback={<PageLoader />}>
+                <Opportunities />
+              </Suspense>
+            } />
+            <Route path="/opportunities/:id" element={
+              <Suspense fallback={<PageLoader />}>
+                <OpportunityDetail />
               </Suspense>
             } />
             

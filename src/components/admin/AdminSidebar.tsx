@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { 
   LayoutDashboard, Users, FolderKanban, Settings, 
   FileText, BarChart3, Shield, Home, Newspaper,
-  Receipt, CreditCard, HelpCircle, BookOpen
+  Receipt, CreditCard, HelpCircle, BookOpen, Crown, Briefcase
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -18,6 +18,8 @@ const menuItems = [
   { id: "users", label: "Utilisateurs", icon: Users },
   { id: "requests", label: "Demandes de services", icon: FileText },
   { id: "evaluations", label: "Évaluations", icon: BarChart3 },
+  { id: "opportunities", label: "Opportunités", icon: Briefcase },
+  { id: "subscriptions", label: "Abonnements", icon: Crown },
   { id: "referrals", label: "Parrainages", icon: Users },
   { id: "news", label: "Actualités", icon: Newspaper },
   { id: "invoices", label: "Factures", icon: Receipt },
