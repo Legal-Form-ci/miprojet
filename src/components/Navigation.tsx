@@ -61,8 +61,11 @@ export const Navigation = () => {
             <Link to="/about" className="text-foreground hover:text-primary transition-colors text-sm">
               {t('nav.about')}
             </Link>
-            <Link to="/subscription" className="text-primary font-medium hover:text-primary/80 transition-colors text-sm">
-              Espace Membre
+            <Link to="/opportunities" className="text-primary font-medium hover:text-primary/80 transition-colors text-sm">
+              Opportunités
+            </Link>
+            <Link to="/subscription" className="text-accent font-medium hover:text-accent/80 transition-colors text-sm flex items-center gap-1">
+              <span className="text-xs">👑</span> Espace Membre
             </Link>
             <Link to="/contact" className="text-foreground hover:text-primary transition-colors text-sm">
               {t('nav.contact')}
@@ -179,6 +182,20 @@ export const Navigation = () => {
               onClick={() => setIsMenuOpen(false)}
             >
               {t('nav.about')}
+            </Link>
+            <Link
+              to="/opportunities"
+              className="block text-primary font-medium hover:text-primary/80 transition-colors py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              🎯 Opportunités
+            </Link>
+            <Link
+              to="/subscription"
+              className="block text-accent font-medium hover:text-accent/80 transition-colors py-2"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              👑 Espace Membre
             </Link>
             <Link
               to="/contact"

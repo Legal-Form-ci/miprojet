@@ -2,7 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const SYSTEM_PROMPT = `Tu es Miprojet, l'assistant virtuel intelligent de la plateforme MIPROJET - Plateforme Panafricaine de Structuration et d'Orientation de Projets.
@@ -23,28 +23,16 @@ SERVICES PROPOSÉS:
 7. Formation en gestion de projets
 8. Création d'entreprise
 
-PROCESSUS DE TRAVAIL:
-1. Soumission du projet avec frais d'adhésion
-2. Structuration par l'équipe MIPROJET
-3. Validation par le comité technique
-4. Attribution du label MIPROJET
-5. Orientation vers les partenaires adaptés
-
-PAYS COUVERTS: Côte d'Ivoire, Sénégal, Mali, Burkina Faso, Togo, Bénin, Niger, Cameroun et autres pays d'Afrique
-
 CONTACT:
 - Site: ivoireprojet.com
 - Email: info@ivoireprojet.com
 - Téléphone: +225 07 07 16 79 21
 - Adresse: Bingerville – Adjin Palmeraie, 25 BP 2454 Abidjan 25, Côte d'Ivoire
 
-RÈGLES DE RÉPONSE:
+RÈGLES:
 - Réponds toujours en français de manière claire et professionnelle
 - Sois concis mais complet
-- Guide les utilisateurs vers les bonnes actions sur la plateforme
-- N'invente jamais d'informations sur les financements
-- Rappelle que MIPROJET ne finance pas directement mais oriente vers des partenaires
-- Encourage les porteurs de projets à soumettre leur projet pour structuration`;
+- Rappelle que MIPROJET ne finance pas directement mais oriente vers des partenaires`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -61,7 +49,121 @@ serve(async (req) => {
 
     const action = body.action;
     
-    // News generation action - NO HTML TAGS, direct rich text formatting
+    // ===== OPPORTUNITY GENERATION =====
+    if (action === 'generate_opportunity') {
+      const content = body.content || "";
+      const opportunityType = body.opportunity_type || "funding";
+      
+      const typeLabels: Record<string, string> = {
+        funding: "Financement", training: "Formation", accompaniment: "Accompagnement",
+        partnership: "Partenariat", grant: "Subvention", other: "Autre"
+      };
+      
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-3-flash-preview",
+          messages: [
+            { 
+              role: "system", 
+              content: `Tu es un expert en veille d'opportunités pour MIPROJET, plateforme panafricaine.
+
+MISSION: À partir d'un mot-clé ou d'une brève description, rechercher et générer une fiche d'opportunité complète, professionnelle et détaillée.
+
+TYPE D'OPPORTUNITÉ: ${typeLabels[opportunityType] || opportunityType}
+
+RÈGLES CRITIQUES DE FORMAT:
+1. Le TITRE doit être en MAJUSCULES (max 80 caractères)
+2. La DESCRIPTION est une phrase d'accroche courte et percutante
+3. Le CONTENU doit être structuré ainsi:
+   - Emoji + TITRE DE SECTION en majuscules
+   - Paragraphes bien espacés (deux sauts de ligne entre sections)
+   - Listes avec tirets (-)
+   - Informations concrètes et vérifiables
+   - Contact MIPROJET en fin de contenu
+
+STRUCTURE DU CONTENU:
+🚀 TITRE DE L'OPPORTUNITÉ
+
+Introduction accrocheuse présentant l'opportunité et son importance.
+
+📌 OBJECTIFS
+- Objectif 1
+- Objectif 2
+
+💰 MONTANT ET CONDITIONS
+Détails sur le financement/la formation/l'accompagnement.
+
+✅ CRITÈRES D'ÉLIGIBILITÉ
+Qui peut postuler et comment.
+
+📋 DOCUMENTS REQUIS
+Liste des documents nécessaires.
+
+📅 DATES IMPORTANTES
+Calendrier et échéances.
+
+📧 CONTACT MIPROJET
+- Email : info@ivoireprojet.com
+- Tél : +225 07 07 16 79 21
+- Site : ivoireprojet.com
+
+#MIPROJET #Opportunité #Afrique
+
+Réponds UNIQUEMENT en JSON valide:
+{
+  "title": "TITRE EN MAJUSCULES",
+  "description": "Phrase d'accroche courte et percutante",
+  "content": "Contenu structuré complet",
+  "category": "funding|training|grants|partnerships|general",
+  "eligibility": "Critères d'éligibilité résumés",
+  "location": "Zone géographique",
+  "external_link": "",
+  "contact_email": "info@ivoireprojet.com",
+  "contact_phone": "+225 07 07 16 79 21"
+}`
+            },
+            { role: "user", content: `Génère une fiche d'opportunité professionnelle complète à partir de : ${content}` }
+          ],
+          max_tokens: 3000,
+        }),
+      });
+
+      if (!response.ok) throw new Error("AI generation failed");
+
+      const aiData = await response.json();
+      const aiContent = aiData.choices?.[0]?.message?.content || "";
+      
+      try {
+        const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.content) {
+            parsed.content = parsed.content.replace(/<[^>]*>/g, '').replace(/#{1,6}\s*/g, '').replace(/\*\*/g, '').replace(/\*/g, '');
+          }
+          return new Response(JSON.stringify(parsed), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" }
+          });
+        }
+      } catch (e) { console.error("Parse error:", e); }
+      
+      return new Response(JSON.stringify({
+        title: content.toUpperCase().substring(0, 80),
+        description: `Opportunité de ${typeLabels[opportunityType]} - ${content}`,
+        content: `🚀 ${content.toUpperCase()}\n\nOpportunité de ${typeLabels[opportunityType]} disponible.\n\n📧 CONTACT MIPROJET\n- Email : info@ivoireprojet.com\n- Tél : +225 07 07 16 79 21\n\n#MIPROJET #Opportunité`,
+        category: "general",
+        eligibility: "Porteurs de projets en Afrique",
+        location: "Afrique de l'Ouest",
+        contact_email: "info@ivoireprojet.com",
+        contact_phone: "+225 07 07 16 79 21"
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ===== NEWS GENERATION =====
     if (action === 'generate_news') {
       const content = body.content || "";
       
@@ -80,38 +182,13 @@ serve(async (req) => {
 
 MISSION: Transformer le contenu brut en article professionnel bien structuré.
 
-RÈGLES CRITIQUES - FORMAT DE SORTIE:
-1. NE JAMAIS utiliser de balises HTML (<p>, <h2>, <strong>, etc.)
-2. NE JAMAIS utiliser de symboles Markdown (###, **, *, etc.)
+RÈGLES CRITIQUES:
+1. NE JAMAIS utiliser de balises HTML
+2. NE JAMAIS utiliser de symboles Markdown
 3. Utiliser du TEXTE BRUT avec structure claire
-
-FORMAT À UTILISER:
-- Titre principal en MAJUSCULES sur une ligne
-- Sous-titres avec emoji au début (🎯, 💡, 📊, etc.)
-- Paragraphes séparés par deux sauts de ligne
-- Points importants simplement écrits avec clarté
-- Listes avec tirets simples (-)
-
-EXEMPLE DE FORMAT CORRECT:
-TITRE DE L'ARTICLE EN MAJUSCULES
-
-Introduction du sujet avec contexte général. Premier paragraphe qui accroche le lecteur et présente le sujet.
-
-🎯 Premier sous-titre
-
-Développement du premier point. Explication claire et concise avec des informations pertinentes.
-
-💡 Deuxième sous-titre
-
-Autre section avec contenu structuré. Les points clés sont mis en valeur par leur position et formulation.
-
-- Premier point de liste
-- Deuxième point
-- Troisième point
-
-📊 Conclusion
-
-Synthèse et appel à l'action final.
+4. Titre en MAJUSCULES
+5. Emojis pour sous-titres (🎯, 💡, 📊, etc.)
+6. Paragraphes séparés par deux sauts de ligne
 
 CATÉGORIES: general, events, projects, partnerships, training, opportunities, funding
 
@@ -119,19 +196,17 @@ Réponds en JSON:
 {
   "title": "Titre accrocheur (max 80 caractères)",
   "excerpt": "Résumé court (150-200 caractères)",
-  "content": "Contenu formaté selon les règles ci-dessus",
-  "category": "catégorie_appropriée"
+  "content": "Contenu formaté",
+  "category": "catégorie"
 }`
             },
-            { role: "user", content: `Transforme ce contenu en article professionnel:\n\n${content}` }
+            { role: "user", content: `Transforme en article professionnel:\n\n${content}` }
           ],
           max_tokens: 2000,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("AI generation failed");
-      }
+      if (!response.ok) throw new Error("AI generation failed");
 
       const aiData = await response.json();
       const aiContent = aiData.choices?.[0]?.message?.content || "";
@@ -140,37 +215,24 @@ Réponds en JSON:
         const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          // Clean any remaining HTML/Markdown
           if (parsed.content) {
-            parsed.content = parsed.content
-              .replace(/<[^>]*>/g, '')
-              .replace(/#{1,6}\s*/g, '')
-              .replace(/\*\*/g, '')
-              .replace(/\*/g, '');
+            parsed.content = parsed.content.replace(/<[^>]*>/g, '').replace(/#{1,6}\s*/g, '').replace(/\*\*/g, '').replace(/\*/g, '');
           }
           return new Response(JSON.stringify(parsed), {
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
-      } catch (e) {
-        console.error("Parse error:", e);
-      }
-      
-      // Fallback
-      const lines = content.split('\n').filter((l: string) => l.trim());
-      const title = lines[0]?.substring(0, 80) || "Actualité MIPROJET";
+      } catch (e) { console.error("Parse error:", e); }
       
       return new Response(JSON.stringify({
-        title,
+        title: content.split('\n')[0]?.substring(0, 80) || "Actualité MIPROJET",
         excerpt: content.substring(0, 200) + "...",
         content: content,
         category: "general"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Evaluation AI generation
+    // ===== EVALUATION GENERATION =====
     if (action === 'generate_evaluation') {
       const projectData = body.projectData || {};
       const scores = body.scores || {};
@@ -186,42 +248,26 @@ Réponds en JSON:
           messages: [
             { 
               role: "system", 
-              content: `Tu es un expert en évaluation de projets pour MIPROJET.
-
-Génère une évaluation professionnelle et constructive basée sur les données du projet.
+              content: `Tu es un expert en évaluation de projets pour MIPROJET. Génère une évaluation professionnelle.
 
 Réponds UNIQUEMENT en JSON valide:
 {
-  "resume": "Résumé exécutif professionnel du projet (2-3 phrases)",
+  "resume": "Résumé exécutif (2-3 phrases)",
   "forces": ["Point fort 1", "Point fort 2", "Point fort 3"],
   "faiblesses": ["Point à améliorer 1", "Point à améliorer 2"],
-  "recommandations": ["Recommandation stratégique 1", "Recommandation 2", "Recommandation 3"]
+  "recommandations": ["Recommandation 1", "Recommandation 2", "Recommandation 3"]
 }`
             },
             { 
               role: "user", 
-              content: `Évalue ce projet de manière professionnelle:
-
-Projet: ${projectData.title || "Non spécifié"}
-Secteur: ${projectData.sector || "Non spécifié"}
-Description: ${projectData.description || "Non fournie"}
-
-Scores attribués:
-- Porteur de projet: ${scores.porteur || 0}/100
-- Qualité du projet: ${scores.projet || 0}/100
-- Viabilité financière: ${scores.financier || 0}/100
-- Niveau de maturité: ${scores.maturite || 0}/100
-- Impact potentiel: ${scores.impact || 0}/100
-- Qualité de l'équipe: ${scores.equipe || 0}/100`
+              content: `Évalue ce projet:\nProjet: ${projectData.title || "Non spécifié"}\nSecteur: ${projectData.sector || "Non spécifié"}\nDescription: ${projectData.description || "Non fournie"}\n\nScores:\n- Porteur: ${scores.porteur || 0}/100\n- Projet: ${scores.projet || 0}/100\n- Financier: ${scores.financier || 0}/100\n- Maturité: ${scores.maturite || 0}/100\n- Impact: ${scores.impact || 0}/100\n- Équipe: ${scores.equipe || 0}/100`
             }
           ],
           max_tokens: 1000,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("AI evaluation failed");
-      }
+      if (!response.ok) throw new Error("AI evaluation failed");
 
       const aiData = await response.json();
       const aiContent = aiData.choices?.[0]?.message?.content || "";
@@ -229,29 +275,23 @@ Scores attribués:
       try {
         const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]);
-          return new Response(JSON.stringify(parsed), {
+          return new Response(JSON.stringify(JSON.parse(jsonMatch[0])), {
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
-      } catch (e) {
-        console.error("Evaluation parse error:", e);
-      }
+      } catch (e) { console.error("Evaluation parse error:", e); }
       
       return new Response(JSON.stringify({
-        resume: "Projet en cours d'évaluation par les experts MIPROJET. Une analyse approfondie sera fournie prochainement.",
-        forces: ["Idée innovante à fort potentiel", "Secteur porteur", "Engagement du porteur"],
-        faiblesses: ["Documentation à compléter", "Projections financières à affiner"],
-        recommandations: ["Finaliser le business plan détaillé", "Affiner les projections sur 3 ans", "Identifier des partenaires stratégiques"]
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+        resume: "Projet en cours d'évaluation.",
+        forces: ["Idée innovante", "Secteur porteur", "Engagement du porteur"],
+        faiblesses: ["Documentation à compléter", "Projections à affiner"],
+        recommandations: ["Finaliser le business plan", "Identifier des partenaires"]
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Universal content generation for the advanced AI editor
+    // ===== UNIVERSAL CONTENT GENERATION =====
     if (action === 'generate_universal_content') {
       const content = body.content || "";
-      const fields = body.fields || [];
       
       const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -264,70 +304,19 @@ Scores attribués:
           messages: [
             { 
               role: "system", 
-              content: `Tu es un expert en rédaction de contenu professionnel pour MIPROJET.
+              content: `Expert rédacteur MIPROJET. Transforme le contenu brut en article professionnel structuré.
+Format: TEXTE BRUT, pas de HTML/Markdown. Titre MAJUSCULES. Emojis pour sous-titres.
+Catégories: general, events, projects, partnerships, training, opportunities, funding
 
-MISSION: Analyser le texte brut fourni et générer un contenu structuré, professionnel et engageant.
-
-RÈGLES CRITIQUES - FORMAT DE SORTIE:
-1. NE JAMAIS utiliser de balises HTML
-2. NE JAMAIS utiliser de symboles Markdown (###, **, *, etc.)
-3. Utiliser du TEXTE BRUT avec structure claire
-
-FORMAT À UTILISER:
-- Titre principal en MAJUSCULES sur une ligne (max 80 caractères)
-- Emojis pour les sous-titres (🎯, 💡, 📊, 🚀, ✅, 📌, 🔹, etc.)
-- Paragraphes séparés par deux sauts de ligne
-- Listes avec tirets simples (-)
-- Hashtags pertinents à la fin (#MIPROJET #Entrepreneuriat...)
-
-STRUCTURE TYPE:
-🚀 TITRE PRINCIPAL EN MAJUSCULES
-
-Introduction accrocheuse qui présente le sujet de manière engageante.
-
-📌 PREMIÈRE SECTION
-
-Développement du premier point avec informations clés.
-
-💡 DEUXIÈME SECTION
-
-Contenu structuré et informatif.
-
-- Point clé 1
-- Point clé 2
-- Point clé 3
-
-🎯 CONCLUSION
-
-Synthèse et appel à l'action.
-
-#MIPROJET #Entrepreneuriat #Afrique
-
-CATÉGORIES DISPONIBLES: general, events, projects, partnerships, training, opportunities, funding
-
-Génère le JSON avec les champs demandés.`
+JSON: { "title": "...", "excerpt": "...", "content": "...", "category": "..." }`
             },
-            { 
-              role: "user", 
-              content: `Transforme ce contenu brut en article professionnel. Génère UNIQUEMENT un JSON valide avec ces champs:
-{
-  "title": "Titre accrocheur court (max 80 caractères)",
-  "excerpt": "Résumé court (150-200 caractères)",
-  "content": "Contenu formaté avec emojis, sections, paragraphes clairs",
-  "category": "catégorie_appropriée"
-}
-
-Contenu brut à transformer:
-${content}`
-            }
+            { role: "user", content: `Transforme:\n${content}` }
           ],
           max_tokens: 2500,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error("AI universal generation failed");
-      }
+      if (!response.ok) throw new Error("AI universal generation failed");
 
       const aiData = await response.json();
       const aiContent = aiData.choices?.[0]?.message?.content || "";
@@ -336,34 +325,24 @@ ${content}`
         const jsonMatch = aiContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           const parsed = JSON.parse(jsonMatch[0]);
-          // Clean any remaining HTML/Markdown
           if (parsed.content) {
-            parsed.content = parsed.content
-              .replace(/<[^>]*>/g, '')
-              .replace(/#{1,6}\s*/g, '')
-              .replace(/\*\*/g, '')
-              .replace(/\*/g, '');
+            parsed.content = parsed.content.replace(/<[^>]*>/g, '').replace(/#{1,6}\s*/g, '').replace(/\*\*/g, '').replace(/\*/g, '');
           }
           return new Response(JSON.stringify(parsed), {
             headers: { ...corsHeaders, "Content-Type": "application/json" }
           });
         }
-      } catch (e) {
-        console.error("Universal content parse error:", e);
-      }
+      } catch (e) { console.error("Universal content parse error:", e); }
       
-      // Fallback
       return new Response(JSON.stringify({
         title: content.split('\n')[0]?.substring(0, 80) || "Contenu MIPROJET",
         excerpt: content.substring(0, 200) + "...",
         content: content,
         category: "general"
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Default: Chat assistant
+    // ===== DEFAULT: CHAT ASSISTANT =====
     const messages = body.messages || [];
     if (!Array.isArray(messages)) {
       return new Response(
@@ -392,13 +371,13 @@ ${content}`
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Limite de requêtes atteinte, veuillez réessayer plus tard." }),
+          JSON.stringify({ error: "Limite de requêtes atteinte, réessayez plus tard." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "Crédits insuffisants pour l'assistant IA." }),
+          JSON.stringify({ error: "Crédits insuffisants." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
