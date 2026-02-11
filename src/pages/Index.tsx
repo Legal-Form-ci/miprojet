@@ -12,6 +12,7 @@ import { Features } from "@/components/Features";
 import { CallToAction } from "@/components/CallToAction";
 import { Footer } from "@/components/Footer";
 import { WelcomePopup } from "@/components/WelcomePopup";
+import { MembershipBanner } from "@/components/MembershipBanner";
 
 const Index = () => {
   return (
@@ -21,6 +22,7 @@ const Index = () => {
       <Hero />
       <PartnershipBanner />
       <LatestNews />
+      <MembershipBanner />
       <StatsSection />
       <HowItWorks />
       <ServicesSection />
